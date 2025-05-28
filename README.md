@@ -1,1 +1,1 @@
-### WinRM Config Log Collector 
+### WinRM Config Log Collector  
