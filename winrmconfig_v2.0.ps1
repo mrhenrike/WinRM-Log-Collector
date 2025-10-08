@@ -63,7 +63,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("report", "enable", "configurefirewall", "exportcacert", "showallcerts", "disable", "status")]
+    [ValidateSet("report", "enable", "configurefirewall", "exportcacert", "showallcerts", "disable", "status", "status-all")]
     [string]$Action,
     
     [Parameter()]
@@ -173,7 +173,8 @@ function Show-Help {
     Write-Host "  exportcacert      Export certificate for WEC" -ForegroundColor White
     Write-Host "  showallcerts      List compatible certificates" -ForegroundColor White
     Write-Host "  disable           Remove WinRM listeners" -ForegroundColor White
-    Write-Host "  status            Check WinRM service status" -ForegroundColor White
+    Write-Host "  status            Check WinRM service status (quick summary)" -ForegroundColor White
+    Write-Host "  status-all        Check WinRM service status (detailed report)" -ForegroundColor White
     Write-Host ""
     
     Write-Host "USAGE EXAMPLES:" -ForegroundColor Yellow
@@ -195,8 +196,11 @@ function Show-Help {
     Write-Host "  # List available certificates" -ForegroundColor White
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action showallcerts" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "  # Check WinRM status" -ForegroundColor White
+    Write-Host "  # Check WinRM status (quick)" -ForegroundColor White
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action status" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  # Check WinRM status (detailed)" -ForegroundColor White
+    Write-Host "  .\winrmconfig_v2.0.ps1 -Action status-all" -ForegroundColor Gray
     Write-Host ""
     
     Write-Host "PARAMETERS:" -ForegroundColor Yellow
@@ -242,6 +246,56 @@ function Show-Help {
     Write-Host ("=" * 80) -ForegroundColor Cyan
 }
 
+# Quick status function for summary
+function Get-QuickStatus {
+    Write-Log "Generating quick WinRM status..." "Info"
+    
+    # Service Status
+    $winrmService = Get-Service -Name "WinRM" -ErrorAction SilentlyContinue
+    $firewallService = Get-Service -Name "MpsSvc" -ErrorAction SilentlyContinue
+    
+    Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
+    Write-Host "WINRM QUICK STATUS" -ForegroundColor Yellow
+    Write-Host ("=" * 60) -ForegroundColor Cyan
+    
+    # Service Information
+    Write-Host "`nSERVICES:" -ForegroundColor Green
+    Write-Host "  WinRM: $($winrmService.Status)" -ForegroundColor $(if ($winrmService.Status -eq "Running") { "Green" } else { "Red" })
+    Write-Host "  Firewall: $($firewallService.Status)" -ForegroundColor $(if ($firewallService.Status -eq "Running") { "Green" } else { "Red" })
+    
+    # Quick listener check
+    try {
+        $listeners = winrm enumerate winrm/config/listener
+        if ($listeners -and $listeners.Length -gt 0) {
+            Write-Host "`nLISTENERS:" -ForegroundColor Green
+            $listenerCount = 0
+            foreach ($listener in $listeners) {
+                $listenerCount++
+                # Simple display without complex parsing
+                Write-Host "  Listener #$listenerCount`: Active" -ForegroundColor White
+            }
+        } else {
+            Write-Host "`nLISTENERS: None configured" -ForegroundColor Red
+        }
+    } catch {
+        Write-Host "`nLISTENERS: Unable to check" -ForegroundColor Yellow
+    }
+    
+    # Quick firewall check
+    try {
+        $firewallRules = Get-NetFirewallRule -DisplayName "*WinRM*" -ErrorAction SilentlyContinue
+        if ($firewallRules) {
+            Write-Host "`nFIREWALL: $($firewallRules.Count) WinRM rules found" -ForegroundColor Green
+        } else {
+            Write-Host "`nFIREWALL: No WinRM rules found" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "`nFIREWALL: Unable to check" -ForegroundColor Yellow
+    }
+    
+    Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
+}
+
 # Enhanced status function with detailed listener information
 function Get-DetailedStatus {
     Write-Log "Generating detailed WinRM status report..." "Info"
@@ -272,7 +326,7 @@ function Get-DetailedStatus {
                 $listenerCount++
                 Write-Host "`n  Listener #$listenerCount" -ForegroundColor Yellow
                 
-                # Parse listener information with better regex
+                # Parse listener information using XML parsing
                 $address = ""
                 $transport = ""
                 $port = ""
@@ -282,38 +336,42 @@ function Get-DetailedStatus {
                 $listeningOn = ""
                 $enabled = "Yes"
                 
-                # Extract information from listener XML with improved parsing
-                if ($listener -match 'Address="([^"]*)"') {
-                    $address = $matches[1]
-                }
-                if ($listener -match 'Transport="([^"]*)"') {
-                    $transport = $matches[1]
-                }
-                if ($listener -match 'Port="([^"]*)"') {
-                    $port = $matches[1]
-                }
-                if ($listener -match 'Hostname="([^"]*)"') {
-                    $hostname = $matches[1]
-                }
-                if ($listener -match 'CertificateThumbprint="([^"]*)"') {
-                    $certificateThumbprint = $matches[1]
-                }
-                if ($listener -match 'UrlPrefix="([^"]*)"') {
-                    $urlPrefix = $matches[1]
-                }
-                if ($listener -match 'ListeningOn="([^"]*)"') {
-                    $listeningOn = $matches[1]
-                }
-                
-                # If no specific values found, try alternative parsing
-                if (-not $address -and $listener -match 'Address=([^\s]+)') {
-                    $address = $matches[1]
-                }
-                if (-not $transport -and $listener -match 'Transport=([^\s]+)') {
-                    $transport = $matches[1]
-                }
-                if (-not $port -and $listener -match 'Port=([^\s]+)') {
-                    $port = $matches[1]
+                try {
+                    # Parse XML content
+                    [xml]$listenerXml = $listener
+                    if ($listenerXml -and $listenerXml.Listener) {
+                        $listenerNode = $listenerXml.Listener
+                        $address = $listenerNode.Address
+                        $transport = $listenerNode.Transport
+                        $port = $listenerNode.Port
+                        $hostname = $listenerNode.Hostname
+                        $certificateThumbprint = $listenerNode.CertificateThumbprint
+                        $urlPrefix = $listenerNode.UrlPrefix
+                        $listeningOn = $listenerNode.ListeningOn
+                    }
+                } catch {
+                    # Fallback to regex parsing if XML parsing fails
+                    if ($listener -match 'Address="([^"]*)"') {
+                        $address = $matches[1]
+                    }
+                    if ($listener -match 'Transport="([^"]*)"') {
+                        $transport = $matches[1]
+                    }
+                    if ($listener -match 'Port="([^"]*)"') {
+                        $port = $matches[1]
+                    }
+                    if ($listener -match 'Hostname="([^"]*)"') {
+                        $hostname = $matches[1]
+                    }
+                    if ($listener -match 'CertificateThumbprint="([^"]*)"') {
+                        $certificateThumbprint = $matches[1]
+                    }
+                    if ($listener -match 'UrlPrefix="([^"]*)"') {
+                        $urlPrefix = $matches[1]
+                    }
+                    if ($listener -match 'ListeningOn="([^"]*)"') {
+                        $listeningOn = $matches[1]
+                    }
                 }
                 
                 # Display listener details
@@ -896,6 +954,10 @@ function Main {
         }
         
         "status" {
+                Get-QuickStatus
+            }
+            
+            "status-all" {
                 Get-DetailedStatus
             }
         }
