@@ -281,16 +281,32 @@ function Get-QuickStatus {
         Write-Host "`nLISTENERS: Unable to check" -ForegroundColor Yellow
     }
     
-    # Quick firewall check
+    # Quick firewall check for ports 5985 and 5986
+    Write-Host "`nFIREWALL:" -ForegroundColor Green
     try {
-        $firewallRules = Get-NetFirewallRule -DisplayName "*WinRM*" -ErrorAction SilentlyContinue
-        if ($firewallRules) {
-            Write-Host "`nFIREWALL: $($firewallRules.Count) WinRM rules found" -ForegroundColor Green
-        } else {
-            Write-Host "`nFIREWALL: No WinRM rules found" -ForegroundColor Yellow
+        $ports = @(5985, 5986)
+        foreach ($checkPort in $ports) {
+            $firewallRules = Get-NetFirewallRule -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
+            $foundRule = $false
+            $ruleName = ""
+            
+            foreach ($rule in $firewallRules) {
+                $portFilter = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+                if ($portFilter -and ($portFilter.LocalPort -eq $checkPort -or $portFilter.LocalPort -eq "Any")) {
+                    $foundRule = $true
+                    $ruleName = $rule.DisplayName
+                    break
+                }
+            }
+            
+            if ($foundRule) {
+                Write-Host "  Port $checkPort`: Open (Rule: $ruleName)" -ForegroundColor Green
+            } else {
+                Write-Host "  Port $checkPort`: Closed (No rule found)" -ForegroundColor Red
+            }
         }
     } catch {
-        Write-Host "`nFIREWALL: Unable to check" -ForegroundColor Yellow
+        Write-Host "  Unable to check firewall status" -ForegroundColor Yellow
     }
     
     Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
@@ -321,12 +337,16 @@ function Get-DetailedStatus {
         Write-Host "`nLISTENERS CONFIGURATION:" -ForegroundColor Green
         
         if ($listeners -and $listeners.Length -gt 0) {
+            # Convert array to string and split by "Listener" keyword
+            $listenersText = $listeners -join "`n"
+            $listenerBlocks = $listenersText -split "Listener" | Where-Object { $_ -match "Address|Transport|Port" }
+            
             $listenerCount = 0
-            foreach ($listener in $listeners) {
+            foreach ($listenerBlock in $listenerBlocks) {
                 $listenerCount++
                 Write-Host "`n  Listener #$listenerCount" -ForegroundColor Yellow
                 
-                # Parse listener information using XML parsing
+                # Parse listener information from text format
                 $address = ""
                 $transport = ""
                 $port = ""
@@ -334,43 +354,34 @@ function Get-DetailedStatus {
                 $certificateThumbprint = ""
                 $urlPrefix = ""
                 $listeningOn = ""
-                $enabled = "Yes"
+                $enabled = ""
                 
-                try {
-                    # Parse XML content
-                    [xml]$listenerXml = $listener
-                    if ($listenerXml -and $listenerXml.Listener) {
-                        $listenerNode = $listenerXml.Listener
-                        $address = $listenerNode.Address
-                        $transport = $listenerNode.Transport
-                        $port = $listenerNode.Port
-                        $hostname = $listenerNode.Hostname
-                        $certificateThumbprint = $listenerNode.CertificateThumbprint
-                        $urlPrefix = $listenerNode.UrlPrefix
-                        $listeningOn = $listenerNode.ListeningOn
+                # Extract information using line-by-line parsing to avoid cross-matching
+                $lines = $listenerBlock -split "`n"
+                foreach ($line in $lines) {
+                    if ($line -match '^\s*Address\s*=\s*(.+)$') {
+                        $address = $matches[1].Trim()
                     }
-                } catch {
-                    # Fallback to regex parsing if XML parsing fails
-                    if ($listener -match 'Address="([^"]*)"') {
-                        $address = $matches[1]
+                    elseif ($line -match '^\s*Transport\s*=\s*(.+)$') {
+                        $transport = $matches[1].Trim()
                     }
-                    if ($listener -match 'Transport="([^"]*)"') {
-                        $transport = $matches[1]
+                    elseif ($line -match '^\s*Port\s*=\s*(.+)$') {
+                        $port = $matches[1].Trim()
                     }
-                    if ($listener -match 'Port="([^"]*)"') {
-                        $port = $matches[1]
+                    elseif ($line -match '^\s*Hostname\s*=\s*(.+)$') {
+                        $hostname = $matches[1].Trim()
                     }
-                    if ($listener -match 'Hostname="([^"]*)"') {
-                        $hostname = $matches[1]
+                    elseif ($line -match '^\s*Enabled\s*=\s*(.+)$') {
+                        $enabled = $matches[1].Trim()
                     }
-                    if ($listener -match 'CertificateThumbprint="([^"]*)"') {
-                        $certificateThumbprint = $matches[1]
+                    elseif ($line -match '^\s*URLPrefix\s*=\s*(.+)$') {
+                        $urlPrefix = $matches[1].Trim()
                     }
-                    if ($listener -match 'UrlPrefix="([^"]*)"') {
-                        $urlPrefix = $matches[1]
+                    elseif ($line -match '^\s*CertificateThumbprint\s*=\s*(.+)$') {
+                        $certificateThumbprint = $matches[1].Trim()
                     }
-                    if ($listener -match 'ListeningOn="([^"]*)"') {
-                        $listeningOn = $matches[1]
+                    elseif ($line -match '^\s*ListeningOn\s*=\s*(.+)$') {
+                        $listeningOn = $matches[1].Trim()
                     }
                 }
                 
@@ -379,33 +390,40 @@ function Get-DetailedStatus {
                 Write-Host "    Address: $address" -ForegroundColor White
                 Write-Host "    Transport: $transport" -ForegroundColor White
                 Write-Host "    Port: $port" -ForegroundColor White
-                Write-Host "    Hostname: $hostname" -ForegroundColor White
-                Write-Host "    Enable: $enabled" -ForegroundColor Green
-                Write-Host "    URL Prefix: $urlPrefix" -ForegroundColor White
-                Write-Host "    Certificate Thumbprint: $certificateThumbprint" -ForegroundColor White
+                Write-Host "    Hostname: $(if ($hostname) { $hostname } else { 'Not specified' })" -ForegroundColor White
+                Write-Host "    Enabled: $(if ($enabled) { $enabled } else { 'true' })" -ForegroundColor Green
+                Write-Host "    URL Prefix: $(if ($urlPrefix) { $urlPrefix } else { 'wsman' })" -ForegroundColor White
+                Write-Host "    Certificate Thumbprint: $(if ($certificateThumbprint) { $certificateThumbprint } else { 'None' })" -ForegroundColor White
                 Write-Host "    Listening On: $listeningOn" -ForegroundColor White
                 
                 # Check firewall status for this port
                 if ($port) {
+                    Write-Host "`n    FIREWALL STATUS FOR PORT $port`:" -ForegroundColor Yellow
                     try {
-                        $firewallRule = Get-NetFirewallRule -DisplayName "*WinRM*" -ErrorAction SilentlyContinue
-                        $hasFirewallRule = $false
-                        foreach ($rule in $firewallRule) {
+                        $firewallRules = Get-NetFirewallRule -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
+                        $foundRule = $false
+                        
+                        foreach ($rule in $firewallRules) {
                             $portFilter = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
-                            if ($portFilter -and $portFilter.LocalPort -eq $port) {
-                                $hasFirewallRule = $true
+                            if ($portFilter -and ($portFilter.LocalPort -eq $port -or $portFilter.LocalPort -eq "Any")) {
+                                $addressFilter = Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+                                Write-Host "      Rule Name: $($rule.DisplayName)" -ForegroundColor Green
+                                Write-Host "      Direction: $($rule.Direction)" -ForegroundColor White
+                                Write-Host "      Action: $($rule.Action)" -ForegroundColor White
+                                Write-Host "      Status: Open" -ForegroundColor Green
+                                if ($addressFilter) {
+                                    Write-Host "      Remote Address: $($addressFilter.RemoteAddress)" -ForegroundColor White
+                                }
+                                $foundRule = $true
                                 break
                             }
                         }
-                        if ($hasFirewallRule) {
-                            Write-Host "    Firewall Enabled: Yes" -ForegroundColor Green
-                            Write-Host "    Port Incoming: Open" -ForegroundColor Green
-                        } else {
-                            Write-Host "    Firewall Enabled: No" -ForegroundColor Red
-                            Write-Host "    Port Incoming: Blocked" -ForegroundColor Red
+                        
+                        if (-not $foundRule) {
+                            Write-Host "      Status: No specific rule found (may be using default Windows rule)" -ForegroundColor Yellow
                         }
                     } catch {
-                        Write-Host "    Firewall Status: Unable to check" -ForegroundColor Yellow
+                        Write-Host "      Status: Unable to check firewall rules" -ForegroundColor Red
                     }
                 }
             }
