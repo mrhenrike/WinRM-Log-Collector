@@ -127,7 +127,7 @@ function Write-Log {
     $logEntry = "[$timestamp] [$Level] $Message"
     
     # Write to console with color coding
-    switch ($Level) {
+        switch ($Level) {
         "Error" { Write-Host $logEntry -ForegroundColor Red }
         "Warning" { Write-Host $logEntry -ForegroundColor Yellow }
         "Success" { Write-Host $logEntry -ForegroundColor Green }
@@ -273,7 +273,7 @@ function Test-UserExists {
         $userObj = Get-LocalUser -Name $user -ErrorAction SilentlyContinue
         if ($userObj) {
             Write-Log "User found: $user" "Debug"
-            return $true
+        return $true
         }
         
         # Try domain user
@@ -284,10 +284,10 @@ function Test-UserExists {
             )
             if ($domainUser) {
                 Write-Log "Domain user found: $Username" "Debug"
-                return $true
-            }
-        }
-        catch {
+        return $true
+    }
+    }
+    catch {
             Write-Log "Domain user not found: $($_.Exception.Message)" "Debug"
         }
         
@@ -375,7 +375,7 @@ function Test-UserInEventLogReaders {
         }
         
         Write-Log "User not found in Event Log Readers group" "Debug"
-        return $false
+            return $false
     }
     catch {
         Write-Log "Error checking Event Log Readers group membership: $($_.Exception.Message)" "Error"
@@ -410,9 +410,9 @@ function Configure-Firewall {
                     Write-Log "Created firewall rule: $($rule.Name)" "Success"
                 } else {
                     Write-Log "Firewall rule already exists: $($rule.Name)" "Info"
-                }
-            }
-            catch {
+        }
+    }
+    catch {
                 Write-Log "Error creating firewall rule $($rule.Name): $($_.Exception.Message)" "Warning"
             }
         }
@@ -429,16 +429,16 @@ function Configure-Firewall {
                     if ($rule.RemoteAddress) {
                         New-NetFirewallRule -DisplayName $rule.Name -Direction $rule.Direction -Protocol $rule.Protocol -LocalPort $rule.Port -RemoteAddress $rule.RemoteAddress -Action Allow
                         Write-Log "Created WEC-specific firewall rule: $($rule.Name) for IP: $($rule.RemoteAddress)" "Success"
-                    }
-                }
-                catch {
+        }
+    }
+    catch {
                     Write-Log "Error creating WEC firewall rule $($rule.Name): $($_.Exception.Message)" "Warning"
                 }
             }
         }
         
         Write-Log "Firewall configuration completed" "Success"
-        return $true
+            return $true
     }
     catch {
         Write-Log "Error configuring firewall: $($_.Exception.Message)" "Error"
@@ -473,7 +473,7 @@ function Test-CertificateCompatibility {
         
         if (-not $hasServerAuth) {
             Write-Log "Certificate does not have Server Authentication EKU" "Error"
-            return $false
+        return $false
         }
         
         # Check certificate validity
@@ -483,7 +483,7 @@ function Test-CertificateCompatibility {
         }
         
         Write-Log "Certificate is compatible" "Success"
-        return $true
+                return $true
     }
     catch {
         Write-Log "Error testing certificate compatibility: $($_.Exception.Message)" "Error"
@@ -510,21 +510,21 @@ function New-HTTPListener {
             winrm set winrm/config/service '@{AllowUnencrypted="true"}'
             winrm set winrm/config/client '@{TrustedHosts="*"}'
             
-            $Global:RestartRequired = $true
+                        $Global:RestartRequired = $true
             Write-Log "HTTP listener configuration updated" "Success"
-            return $true
-        }
+                        return $true
+                    }
         
         # Try quickconfig first
         try {
-            Write-Lost "Attempting winrm quickconfig for HTTP" "Debug"
+            Write-Log "Attempting winrm quickconfig for HTTP" "Debug"
             $quickconfigResult = winrm quickconfig -transport:http -q
             if ($LASTEXITCODE -eq 0) {
                 Write-Log "HTTP listener created via quickconfig" "Success"
                 $Global:RestartRequired = $true
-                return $true
-            }
-        }
+                        return $true
+                    }
+                }
         catch {
             Write-Log "Quickconfig failed, attempting manual configuration" "Debug"
         }
@@ -539,7 +539,7 @@ function New-HTTPListener {
             return $true
         } else {
             Write-Log "Failed to create HTTP listener" "Error"
-            return $false
+        return $false
         }
     }
     catch {
@@ -570,17 +570,17 @@ function New-HTTPSListener {
             
             $Global:RestartRequired = $true
             Write-Log "HTTPS listener configuration updated" "Success"
-            return $true
+                return $true
         }
         
         # Validate certificate if provided
         if ($ThumbPrint) {
             if (-not (Test-CertificateCompatibility -ThumbPrint $ThumbPrint)) {
                 Write-Log "Certificate validation failed" "Error"
-                return $false
-            }
-        }
-        
+        return $false
+    }
+}
+
         # Try quickconfig first
         try {
             Write-Log "Attempting winrm quickconfig for HTTPS" "Debug"
@@ -588,8 +588,8 @@ function New-HTTPSListener {
             if ($LASTEXITCODE -eq 0) {
                 Write-Log "HTTPS listener created via quickconfig" "Success"
                 $Global:RestartRequired = $true
-                return $true
-            }
+                    return $true
+                }
         }
         catch {
             Write-Log "Quickconfig failed, attempting manual configuration" "Debug"
@@ -599,7 +599,7 @@ function New-HTTPSListener {
         if ($ThumbPrint) {
             $listenerConfig = "winrm create winrm/config/Listener?Address=*+Transport=HTTPS+Port=$Port CertificateThumbprint=`"$ThumbPrint`""
         } else {
-            $listname = $env:COMPUTERNAME
+            $hostname = $env:COMPUTERNAME
             $listenerConfig = "winrm create winrm/config/Listener?Address=*+Transport=HTTPS+Port=$Port Hostname=`"$hostname`""
         }
         
@@ -608,11 +608,11 @@ function New-HTTPSListener {
         if ($LASTEXITCODE -eq 0) {
             Write-Log "HTTPS listener created successfully" "Success"
             $Global:RestartRequired = $true
-            return $true
+        return $true
         } else {
             Write-Log "Failed to create HTTPS listener" "Error"
-            return $false
-        }
+        return $false
+    }
     }
     catch {
         Write-Log "Error creating HTTPS listener: $($_.Exception.Message)" "Error"
@@ -637,9 +637,9 @@ function Main {
                 Write-Log "Generating WinRM configuration report" "Info"
                 # Report logic here
                 Write-Log "Report generated successfully" "Success"
-            }
-            
-            "enable" {
+        }
+        
+        "enable" {
                 if (-not $ListenerType) {
                     Write-Log "ListenerType parameter is required for enable action" "Error"
                     return
@@ -648,7 +648,7 @@ function Main {
                 if ($User) {
                     if (-not (Test-UserExists -Username $User)) {
                         Write-Log "User does not exist: $User" "Error"
-                        return
+                            return
                     }
                     
                     if (-not (Test-UserInEventLogReaders -Username $User)) {
@@ -664,31 +664,31 @@ function Main {
                     $port = if ($Port) { $Port } else { 5986 }
                     New-HTTPSListener -Port $port -ThumbPrint $ThumbPrint -User $User
                 }
-            }
-            
-            "configurefirewall" {
+        }
+        
+        "configurefirewall" {
                 Configure-Firewall -WECIP $WECIP -WECHostname $WECHostname
-            }
-            
-            "exportcacert" {
+        }
+        
+        "exportcacert" {
                 Write-Log "Exporting certificate" "Info"
                 # Certificate export logic here
                 Write-Log "Certificate exported successfully" "Success"
-            }
-            
-            "showallcerts" {
+        }
+        
+        "showallcerts" {
                 Write-Log "Listing all certificates" "Info"
                 # Certificate listing logic here
                 Write-Log "Certificate list generated" "Success"
-            }
-            
-            "disable" {
+        }
+        
+        "disable" {
                 Write-Log "Disabling WinRM listeners" "Info"
                 # Disable logic here
                 Write-Log "WinRM listeners disabled" "Success"
-            }
-            
-            "status" {
+        }
+        
+        "status" {
                 Write-Log "Checking WinRM service status" "Info"
                 # Status check logic here
                 Write-Log "Status check completed" "Success"
