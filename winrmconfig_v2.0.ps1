@@ -242,6 +242,213 @@ function Show-Help {
     Write-Host ("=" * 80) -ForegroundColor Cyan
 }
 
+# Enhanced status function with detailed listener information
+function Get-DetailedStatus {
+    Write-Log "Generating detailed WinRM status report..." "Info"
+    
+    # Service Status
+    $winrmService = Get-Service -Name "WinRM" -ErrorAction SilentlyContinue
+    $firewallService = Get-Service -Name "MpsSvc" -ErrorAction SilentlyContinue
+    
+    Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
+    Write-Host "WINRM DETAILED STATUS REPORT" -ForegroundColor Yellow
+    Write-Host ("=" * 80) -ForegroundColor Cyan
+    
+    # Service Information
+    Write-Host "`nSERVICE STATUS:" -ForegroundColor Green
+    Write-Host "  WinRM Service: $($winrmService.Status)" -ForegroundColor White
+    Write-Host "  Firewall Service: $($firewallService.Status)" -ForegroundColor White
+    
+    # Get WinRM configuration
+    try {
+        $winrmConfig = winrm get winrm/config
+        $listeners = winrm enumerate winrm/config/listener
+        
+        Write-Host "`nLISTENERS CONFIGURATION:" -ForegroundColor Green
+        
+        if ($listeners -and $listeners.Length -gt 0) {
+            $listenerCount = 0
+            foreach ($listener in $listeners) {
+                $listenerCount++
+                Write-Host "`n  Listener #$listenerCount" -ForegroundColor Yellow
+                
+                # Parse listener information with better regex
+                $address = ""
+                $transport = ""
+                $port = ""
+                $hostname = ""
+                $certificateThumbprint = ""
+                $urlPrefix = ""
+                $listeningOn = ""
+                $enabled = "Yes"
+                
+                # Extract information from listener XML with improved parsing
+                if ($listener -match 'Address="([^"]*)"') {
+                    $address = $matches[1]
+                }
+                if ($listener -match 'Transport="([^"]*)"') {
+                    $transport = $matches[1]
+                }
+                if ($listener -match 'Port="([^"]*)"') {
+                    $port = $matches[1]
+                }
+                if ($listener -match 'Hostname="([^"]*)"') {
+                    $hostname = $matches[1]
+                }
+                if ($listener -match 'CertificateThumbprint="([^"]*)"') {
+                    $certificateThumbprint = $matches[1]
+                }
+                if ($listener -match 'UrlPrefix="([^"]*)"') {
+                    $urlPrefix = $matches[1]
+                }
+                if ($listener -match 'ListeningOn="([^"]*)"') {
+                    $listeningOn = $matches[1]
+                }
+                
+                # If no specific values found, try alternative parsing
+                if (-not $address -and $listener -match 'Address=([^\s]+)') {
+                    $address = $matches[1]
+                }
+                if (-not $transport -and $listener -match 'Transport=([^\s]+)') {
+                    $transport = $matches[1]
+                }
+                if (-not $port -and $listener -match 'Port=([^\s]+)') {
+                    $port = $matches[1]
+                }
+                
+                # Display listener details
+                Write-Host "    Listener: $transport" -ForegroundColor White
+                Write-Host "    Address: $address" -ForegroundColor White
+                Write-Host "    Transport: $transport" -ForegroundColor White
+                Write-Host "    Port: $port" -ForegroundColor White
+                Write-Host "    Hostname: $hostname" -ForegroundColor White
+                Write-Host "    Enable: $enabled" -ForegroundColor Green
+                Write-Host "    URL Prefix: $urlPrefix" -ForegroundColor White
+                Write-Host "    Certificate Thumbprint: $certificateThumbprint" -ForegroundColor White
+                Write-Host "    Listening On: $listeningOn" -ForegroundColor White
+                
+                # Check firewall status for this port
+                if ($port) {
+                    try {
+                        $firewallRule = Get-NetFirewallRule -DisplayName "*WinRM*" -ErrorAction SilentlyContinue
+                        $hasFirewallRule = $false
+                        foreach ($rule in $firewallRule) {
+                            $portFilter = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+                            if ($portFilter -and $portFilter.LocalPort -eq $port) {
+                                $hasFirewallRule = $true
+                                break
+                            }
+                        }
+                        if ($hasFirewallRule) {
+                            Write-Host "    Firewall Enabled: Yes" -ForegroundColor Green
+                            Write-Host "    Port Incoming: Open" -ForegroundColor Green
+                        } else {
+                            Write-Host "    Firewall Enabled: No" -ForegroundColor Red
+                            Write-Host "    Port Incoming: Blocked" -ForegroundColor Red
+                        }
+                    } catch {
+                        Write-Host "    Firewall Status: Unable to check" -ForegroundColor Yellow
+                    }
+                }
+            }
+        } else {
+            Write-Host "  No listeners found!" -ForegroundColor Red
+        }
+        
+        # WinRM Service Configuration
+        Write-Host "`nWINRM SERVICE CONFIGURATION:" -ForegroundColor Green
+        if ($winrmConfig) {
+            $lines = $winrmConfig -split "`n"
+            foreach ($line in $lines) {
+                if ($line -match "AllowUnencrypted" -or $line -match "TrustedHosts" -or $line -match "Auth" -or $line -match "Service") {
+                    Write-Host "  $line" -ForegroundColor White
+                }
+            }
+        }
+        
+        # Firewall Rules
+        Write-Host "`nFIREWALL RULES:" -ForegroundColor Green
+        $firewallRules = Get-NetFirewallRule -DisplayName "*WinRM*" -ErrorAction SilentlyContinue
+        if ($firewallRules) {
+            foreach ($rule in $firewallRules) {
+                Write-Host "  Rule: $($rule.DisplayName)" -ForegroundColor White
+                Write-Host "  Direction: $($rule.Direction)" -ForegroundColor White
+                Write-Host "  Action: $($rule.Action)" -ForegroundColor White
+                Write-Host "  Enabled: $($rule.Enabled)" -ForegroundColor White
+                
+                # Get port information safely
+                try {
+                    $portFilter = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+                    if ($portFilter) {
+                        Write-Host "  Local Port: $($portFilter.LocalPort)" -ForegroundColor White
+                    }
+                } catch {
+                    Write-Host "  Local Port: Not specified" -ForegroundColor Gray
+                }
+                
+                # Get address information safely
+                try {
+                    $addressFilter = Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+                    if ($addressFilter) {
+                        Write-Host "  Remote Address: $($addressFilter.RemoteAddress)" -ForegroundColor White
+                    }
+                } catch {
+                    Write-Host "  Remote Address: Any" -ForegroundColor Gray
+                }
+            }
+        } else {
+            Write-Host "  No WinRM firewall rules found" -ForegroundColor Yellow
+        }
+        
+        # Certificate Information
+        Write-Host "`nCERTIFICATE INFORMATION:" -ForegroundColor Green
+        $certificates = Get-ChildItem Cert:\LocalMachine\My -ErrorAction SilentlyContinue
+        if ($certificates) {
+            foreach ($cert in $certificates) {
+                Write-Host "  Subject: $($cert.Subject)" -ForegroundColor White
+                Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor White
+                Write-Host "  Valid From: $($cert.NotBefore)" -ForegroundColor White
+                Write-Host "  Valid To: $($cert.NotAfter)" -ForegroundColor White
+                Write-Host "  Expired: $(if ($cert.NotAfter -lt (Get-Date)) { 'Yes' } else { 'No' })" -ForegroundColor $(if ($cert.NotAfter -lt (Get-Date)) { 'Red' } else { 'Green' })
+                Write-Host "  ---" -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "  No certificates found in LocalMachine\My store" -ForegroundColor Yellow
+        }
+        
+        # Network Configuration
+        Write-Host "`nNETWORK CONFIGURATION:" -ForegroundColor Green
+        $networkAdapters = Get-NetAdapter | Where-Object { $_.Status -eq "Up" }
+        foreach ($adapter in $networkAdapters) {
+            Write-Host "  Adapter: $($adapter.Name)" -ForegroundColor White
+            Write-Host "  Status: $($adapter.Status)" -ForegroundColor White
+            $ipConfig = Get-NetIPAddress -InterfaceIndex $adapter.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
+            if ($ipConfig) {
+                Write-Host "  IP Address: $($ipConfig.IPAddress)" -ForegroundColor White
+            }
+        }
+        
+        # WinRM Client Configuration
+        Write-Host "`nWINRM CLIENT CONFIGURATION:" -ForegroundColor Green
+        try {
+            $clientConfig = winrm get winrm/config/client
+            $clientLines = $clientConfig -split "`n"
+            foreach ($line in $clientLines) {
+                if ($line -match "TrustedHosts" -or $line -match "AllowUnencrypted") {
+                    Write-Host "  $line" -ForegroundColor White
+                }
+            }
+        } catch {
+            Write-Host "  Unable to retrieve client configuration" -ForegroundColor Red
+        }
+        
+    } catch {
+        Write-Log "Error getting WinRM configuration: $($_.Exception.Message)" "Error"
+    }
+    
+    Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
+}
+
 # Test if user exists
 function Test-UserExists {
     param([string]$Username)
@@ -273,7 +480,7 @@ function Test-UserExists {
         $userObj = Get-LocalUser -Name $user -ErrorAction SilentlyContinue
         if ($userObj) {
             Write-Log "User found: $user" "Debug"
-        return $true
+            return $true
         }
         
         # Try domain user
@@ -284,15 +491,15 @@ function Test-UserExists {
             )
             if ($domainUser) {
                 Write-Log "Domain user found: $Username" "Debug"
-        return $true
-    }
+            return $true
+        }
     }
     catch {
             Write-Log "Domain user not found: $($_.Exception.Message)" "Debug"
         }
         
         Write-Log "User not found: $Username" "Warning"
-        return $false
+            return $false
     }
     catch {
         Write-Log "Error testing user existence: $($_.Exception.Message)" "Error"
@@ -375,7 +582,7 @@ function Test-UserInEventLogReaders {
         }
         
         Write-Log "User not found in Event Log Readers group" "Debug"
-            return $false
+        return $false
     }
     catch {
         Write-Log "Error checking Event Log Readers group membership: $($_.Exception.Message)" "Error"
@@ -483,7 +690,7 @@ function Test-CertificateCompatibility {
         }
         
         Write-Log "Certificate is compatible" "Success"
-                return $true
+            return $true
     }
     catch {
         Write-Log "Error testing certificate compatibility: $($_.Exception.Message)" "Error"
@@ -512,8 +719,8 @@ function New-HTTPListener {
             
                         $Global:RestartRequired = $true
             Write-Log "HTTP listener configuration updated" "Success"
-                        return $true
-                    }
+                    return $true
+                }
         
         # Try quickconfig first
         try {
@@ -522,9 +729,9 @@ function New-HTTPListener {
             if ($LASTEXITCODE -eq 0) {
                 Write-Log "HTTP listener created via quickconfig" "Success"
                 $Global:RestartRequired = $true
-                        return $true
-                    }
+                    return $true
                 }
+            }
         catch {
             Write-Log "Quickconfig failed, attempting manual configuration" "Debug"
         }
@@ -570,8 +777,8 @@ function New-HTTPSListener {
             
             $Global:RestartRequired = $true
             Write-Log "HTTPS listener configuration updated" "Success"
-                return $true
-        }
+        return $true
+    }
         
         # Validate certificate if provided
         if ($ThumbPrint) {
@@ -689,9 +896,7 @@ function Main {
         }
         
         "status" {
-                Write-Log "Checking WinRM service status" "Info"
-                # Status check logic here
-                Write-Log "Status check completed" "Success"
+                Get-DetailedStatus
             }
         }
         
