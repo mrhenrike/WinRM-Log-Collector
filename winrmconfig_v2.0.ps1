@@ -88,10 +88,10 @@ param(
     [string]$AuthType = "kerberos",
     
     [Parameter()]
-    [string]$WECIP,
+    [string]$wecip,
     
     [Parameter()]
-    [string]$WECHostname,
+    [string]$wechostname,
     
     [Parameter()]
     [ValidateSet("Error", "Warning", "Info", "Debug")]
@@ -106,7 +106,7 @@ param(
 )
 
 # Script metadata
-$ScriptVersion = "2.0.0"
+$ScriptVersion = "2.1.0"
 $ScriptAuthor = "Andre Henrique (Uniao Geek)"
 $ScriptEmail = "contato@uniaogeek.com.br"
 $ScriptLinkedIn = "https://www.linkedin.com/in/mrhenrike"
@@ -185,6 +185,20 @@ function Get-Text {
             "WinRMClientConfig" = "CONFIGURACAO DO CLIENTE WINRM"
             "UnableToRetrieve" = "Nao foi possivel recuperar a configuracao do cliente"
             "LocalPort" = "Porta Local"
+            "WinRMHTTPRuleDesc" = "Regra de firewall para WinRM HTTP - Coleta de logs via WEC"
+            "WinRMHTTPSRuleDesc" = "Regra de firewall para WinRM HTTPS - Coleta de logs via WEC"
+            "WECHTTPRuleDesc" = "Regra de firewall para WEC HTTP - Coleta de logs do servidor"
+            "WECHTTPSRuleDesc" = "Regra de firewall para WEC HTTPS - Coleta de logs do servidor"
+            "FirewallGroup" = "WinRM-WEC-Firewall"
+            "RuleCreated" = "Regra criada"
+            "RuleActive" = "Ativa"
+            "RuleInactive" = "Inativa"
+            "ActionAllow" = "Permitir"
+            "ActionBlock" = "Bloquear"
+            "DirectionInbound" = "Entrada"
+            "DirectionOutbound" = "Saida"
+            "AuthorizedIP" = "IP autorizado"
+            "AllIPs" = "Todos os IPs"
         }
         "en-US" = @{
             "Initializing" = "Initializing WinRM Configuration Script Enhanced v"
@@ -246,6 +260,20 @@ function Get-Text {
             "WinRMClientConfig" = "WINRM CLIENT CONFIGURATION"
             "UnableToRetrieve" = "Unable to retrieve client configuration"
             "LocalPort" = "Local Port"
+            "WinRMHTTPRuleDesc" = "Firewall rule for WinRM HTTP - Log collection via WEC"
+            "WinRMHTTPSRuleDesc" = "Firewall rule for WinRM HTTPS - Log collection via WEC"
+            "WECHTTPRuleDesc" = "Firewall rule for WEC HTTP - Server log collection"
+            "WECHTTPSRuleDesc" = "Firewall rule for WEC HTTPS - Server log collection"
+            "FirewallGroup" = "WinRM-WEC-Firewall"
+            "RuleCreated" = "Rule created"
+            "RuleActive" = "Active"
+            "RuleInactive" = "Inactive"
+            "ActionAllow" = "Allow"
+            "ActionBlock" = "Block"
+            "DirectionInbound" = "Inbound"
+            "DirectionOutbound" = "Outbound"
+            "AuthorizedIP" = "Authorized IP"
+            "AllIPs" = "All IPs"
         }
     }
     
@@ -324,7 +352,7 @@ function Show-Help {
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action enable -ListenerType http -Port 5985" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  # Configure firewall for WEC" -ForegroundColor White
-    Write-Host "  .\winrmconfig_v2.0.ps1 -Action configurefirewall -WECIP `"192.168.1.100`" -WECHostname `"wec-server`"" -ForegroundColor Gray
+    Write-Host "  .\winrmconfig_v2.0.ps1 -Action configurefirewall -wecip `"192.168.1.100`" -wechostname `"wec-server`" -Port 5985 -ListenerType http" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  # Export certificate" -ForegroundColor White
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action exportcacert -ExportCertPath `"C:\temp`"" -ForegroundColor Gray
@@ -347,8 +375,8 @@ function Show-Help {
     Write-Host "  -ThumbPrint       Certificate thumbprint for HTTPS listener" -ForegroundColor White
     Write-Host "  -ExportCertPath   Path to export certificate files" -ForegroundColor White
     Write-Host "  -AuthType         Authentication type: basic, kerberos (default: kerberos)" -ForegroundColor White
-    Write-Host "  -WECIP            IP address of Windows Event Collector" -ForegroundColor White
-    Write-Host "  -WECHostname      Hostname of Windows Event Collector" -ForegroundColor White
+    Write-Host "  -wecip            IP address of Windows Event Collector" -ForegroundColor White
+    Write-Host "  -wechostname      Hostname of Windows Event Collector" -ForegroundColor White
     Write-Host "  -LogLevel         Logging level: Error, Warning, Info, Debug (default: Info)" -ForegroundColor White
     Write-Host "  -ConfigFile       Path to configuration file (JSON format)" -ForegroundColor White
     Write-Host "  -Language         Output language: pt-BR, en-US (default: pt-BR)" -ForegroundColor White
@@ -357,7 +385,7 @@ function Show-Help {
     Write-Host "COMMON SCENARIOS:" -ForegroundColor Yellow
     Write-Host "  # Complete WEC setup (HTTPS + Firewall + Certificate)" -ForegroundColor White
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action enable -ListenerType https -User `"wec-collector@domain.com`"" -ForegroundColor Gray
-    Write-Host "  .\winrmconfig_v2.0.ps1 -Action configurefirewall -WECIP `"192.168.1.100`" -WECHostname `"wec-server`"" -ForegroundColor Gray
+    Write-Host "  .\winrmconfig_v2.0.ps1 -Action configurefirewall -wecip `"192.168.1.100`" -wechostname `"wec-server`" -Port 5985 -ListenerType http" -ForegroundColor Gray
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action exportcacert -ExportCertPath `"C:\temp`"" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  # Development/Testing setup (HTTP + Basic Auth)" -ForegroundColor White
@@ -849,58 +877,134 @@ function Test-UserInEventLogReaders {
 function Configure-Firewall {
     param(
         [string]$WECIP,
-        [string]$WECHostname
+        [string]$WECHostname,
+        [int]$Port = 5985,
+        [string]$ListenerType = "http"
     )
     
     try {
         Write-Log "Configuring firewall for WEC communication" "Info"
         
+        # Determine port based on listener type
+        $winrmPort = if ($ListenerType -eq "https") { 5986 } else { 5985 }
+        
         # Configure WinRM firewall rules
         $firewallRules = @(
-            @{Name="WinRM-HTTP-In"; Port=5985; Protocol="TCP"; Direction="Inbound"},
-            @{Name="WinRM-HTTPS-In"; Port=5986; Protocol="TCP"; Direction="Inbound"}
+            @{
+                Name = "WinRM-HTTP-In"
+                DisplayName = "WinRM-HTTP-In"
+                Description = Get-Text "WinRMHTTPRuleDesc"
+                DisplayGroup = Get-Text "FirewallGroup"
+                Direction = "Inbound"
+                Action = "Allow"
+                Protocol = "TCP"
+                LocalPort = "5985"
+                Profile = "Any"
+            },
+            @{
+                Name = "WinRM-HTTPS-In"
+                DisplayName = "WinRM-HTTPS-In"
+                Description = Get-Text "WinRMHTTPSRuleDesc"
+                DisplayGroup = Get-Text "FirewallGroup"
+                Direction = "Inbound"
+                Action = "Allow"
+                Protocol = "TCP"
+                LocalPort = "5986"
+                Profile = "Any"
+            }
         )
+        
+        Write-Host "`n$(Get-Text 'FirewallRules'):" -ForegroundColor Green
         
         foreach ($rule in $firewallRules) {
             try {
-                # Check if rule exists
-                $existingRule = Get-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue
+                # Remove existing rule if it exists
+                Remove-NetFirewallRule -DisplayName $rule.DisplayName -ErrorAction SilentlyContinue
                 
-                if (-not $existingRule) {
-                    # Create firewall rule
-                    New-NetFirewallRule -DisplayName $rule.Name -Direction $rule.Direction -Protocol $rule.Protocol -LocalPort $rule.Port -Action Allow
-                    Write-Log "Created firewall rule: $($rule.Name)" "Success"
-                } else {
-                    Write-Log "Firewall rule already exists: $($rule.Name)" "Info"
-        }
-    }
-    catch {
-                Write-Log "Error creating firewall rule $($rule.Name): $($_.Exception.Message)" "Warning"
+                # Create new rule with description
+                $newRule = New-NetFirewallRule -DisplayName $rule.DisplayName -Description $rule.Description -Direction $rule.Direction -Action $rule.Action -Protocol $rule.Protocol -LocalPort $rule.LocalPort -Profile $rule.Profile
+                
+                # Display simplified rule information
+                $status = if ($newRule.Enabled) { Get-Text "RuleActive" } else { Get-Text "RuleInactive" }
+                $action = if ($newRule.Action -eq "Allow") { Get-Text "ActionAllow" } else { Get-Text "ActionBlock" }
+                $direction = if ($newRule.Direction -eq "Inbound") { Get-Text "DirectionInbound" } else { Get-Text "DirectionOutbound" }
+                
+                Write-Host "  Nome: $($rule.DisplayName)" -ForegroundColor White
+                Write-Host "  Descricao: $($rule.Description)" -ForegroundColor White
+                Write-Host "  Status: $status" -ForegroundColor $(if ($newRule.Enabled) { "Green" } else { "Red" })
+                Write-Host "  Acao: $action" -ForegroundColor White
+                Write-Host "  Direcao: $direction" -ForegroundColor White
+                Write-Host "  $(Get-Text 'AuthorizedIP'): $(Get-Text 'AllIPs')" -ForegroundColor White
+                Write-Host ""
+                
+                Write-Log "Created firewall rule: $($rule.DisplayName)" "Success"
+            }
+            catch {
+                Write-Log "Error creating firewall rule $($rule.DisplayName): $($_.Exception.Message)" "Error"
             }
         }
         
-        # Configure WEC-specific firewall rules if IP/hostname provided
-        if ($WECIP -or $WECHostname) {
+        # Configure WEC-specific firewall rules
+        if ($WECIP -and $WECHostname) {
             $wecRules = @(
-                @{Name="WEC-HTTP-In"; Port=5985; Protocol="TCP"; Direction="Inbound"; RemoteAddress=$WECIP},
-                @{Name="WEC-HTTPS-In"; Port=5986; Protocol="TCP"; Direction="Inbound"; RemoteAddress=$WECIP}
+                @{
+                    Name = "WEC-HTTP-In"
+                    DisplayName = "WEC-HTTP-In"
+                    Description = Get-Text "WECHTTPRuleDesc"
+                    DisplayGroup = Get-Text "FirewallGroup"
+                    Direction = "Inbound"
+                    Action = "Allow"
+                    Protocol = "TCP"
+                    LocalPort = "5985"
+                    RemoteAddress = $WECIP
+                    Profile = "Any"
+                },
+                @{
+                    Name = "WEC-HTTPS-In"
+                    DisplayName = "WEC-HTTPS-In"
+                    Description = Get-Text "WECHTTPSRuleDesc"
+                    DisplayGroup = Get-Text "FirewallGroup"
+                    Direction = "Inbound"
+                    Action = "Allow"
+                    Protocol = "TCP"
+                    LocalPort = "5986"
+                    RemoteAddress = $WECIP
+                    Profile = "Any"
+                }
             )
             
             foreach ($rule in $wecRules) {
                 try {
-                    if ($rule.RemoteAddress) {
-                        New-NetFirewallRule -DisplayName $rule.Name -Direction $rule.Direction -Protocol $rule.Protocol -LocalPort $rule.Port -RemoteAddress $rule.RemoteAddress -Action Allow
-                        Write-Log "Created WEC-specific firewall rule: $($rule.Name) for IP: $($rule.RemoteAddress)" "Success"
-        }
-    }
-    catch {
-                    Write-Log "Error creating WEC firewall rule $($rule.Name): $($_.Exception.Message)" "Warning"
+                    # Remove existing rule if it exists
+                    Remove-NetFirewallRule -DisplayName $rule.DisplayName -ErrorAction SilentlyContinue
+                    
+                    # Create new rule with description
+                    $newRule = New-NetFirewallRule -DisplayName $rule.DisplayName -Description $rule.Description -Direction $rule.Direction -Action $rule.Action -Protocol $rule.Protocol -LocalPort $rule.LocalPort -RemoteAddress $rule.RemoteAddress -Profile $rule.Profile
+                    
+                    # Display simplified rule information
+                    $status = if ($newRule.Enabled) { Get-Text "RuleActive" } else { Get-Text "RuleInactive" }
+                    $action = if ($newRule.Action -eq "Allow") { Get-Text "ActionAllow" } else { Get-Text "ActionBlock" }
+                    $direction = if ($newRule.Direction -eq "Inbound") { Get-Text "DirectionInbound" } else { Get-Text "DirectionOutbound" }
+                    $authorizedIP = if ($rule.RemoteAddress -eq "*") { Get-Text "AllIPs" } else { $rule.RemoteAddress }
+                    
+                    Write-Host "  Nome: $($rule.DisplayName)" -ForegroundColor White
+                    Write-Host "  Descricao: $($rule.Description)" -ForegroundColor White
+                    Write-Host "  Status: $status" -ForegroundColor $(if ($newRule.Enabled) { "Green" } else { "Red" })
+                    Write-Host "  Acao: $action" -ForegroundColor White
+                    Write-Host "  Direcao: $direction" -ForegroundColor White
+                    Write-Host "  $(Get-Text 'AuthorizedIP'): $authorizedIP" -ForegroundColor White
+                    Write-Host ""
+                    
+                    Write-Log "Created WEC-specific firewall rule: $($rule.DisplayName) for IP: $($rule.RemoteAddress)" "Success"
+                }
+                catch {
+                    Write-Log "Error creating WEC firewall rule $($rule.DisplayName): $($_.Exception.Message)" "Error"
                 }
             }
         }
         
         Write-Log "Firewall configuration completed" "Success"
-            return $true
+        return $true
     }
     catch {
         Write-Log "Error configuring firewall: $($_.Exception.Message)" "Error"
@@ -1090,6 +1194,14 @@ function Main {
         return
     }
     
+    # Validation for configurefirewall action
+    if ($Action -eq "configurefirewall") {
+        if (-not $Port) { $Port = 5985 }
+        if (-not $ListenerType) { $ListenerType = "http" }
+        if (-not $wecip) { $wecip = "*" }
+        if (-not $wechostname) { $wechostname = "localhost" }
+    }
+    
     Write-Log "Initializing WinRM Configuration Script Enhanced v$ScriptVersion" "Info"
     Write-Log "Log file initialized: $LogFile" "Info"
     
@@ -1129,7 +1241,7 @@ function Main {
         }
         
         "configurefirewall" {
-                Configure-Firewall -WECIP $WECIP -WECHostname $WECHostname
+                Configure-Firewall -WECIP $wecip -WECHostname $wechostname -Port $Port -ListenerType $ListenerType
         }
         
         "exportcacert" {
