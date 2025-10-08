@@ -98,7 +98,11 @@ param(
     [string]$LogLevel = "Info",
     
     [Parameter()]
-    [string]$ConfigFile
+    [string]$ConfigFile,
+    
+    [Parameter()]
+    [ValidateSet("pt-BR", "en-US")]
+    [string]$Language = "pt-BR"
 )
 
 # Script metadata
@@ -115,6 +119,138 @@ $LogFile = Join-Path $env:TEMP "winrmconfig_enhanced.log"
 # Set execution policy and strict mode
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 Set-StrictMode -Version Latest
+
+# Translation function
+function Get-Text {
+    param([string]$Key)
+    
+    $translations = @{
+        "pt-BR" = @{
+            "Initializing" = "Inicializando WinRM Configuration Script Enhanced v"
+            "LogInitialized" = "Arquivo de log inicializado:"
+            "GeneratingQuickStatus" = "Gerando status rápido do WinRM..."
+            "GeneratingDetailedStatus" = "Gerando relatório detalhado do WinRM..."
+            "QuickStatus" = "STATUS RAPIDO WINRM"
+            "DetailedStatus" = "RELATORIO DETALHADO WINRM"
+            "Services" = "SERVICOS"
+            "WinRM" = "WinRM"
+            "Firewall" = "Firewall"
+            "Running" = "Em Execucao"
+            "Stopped" = "Parado"
+            "Listeners" = "LISTENERS"
+            "Active" = "Ativo"
+            "Port" = "Porta"
+            "Address" = "Endereco"
+            "Open" = "Aberta"
+            "Closed" = "Fechada"
+            "Blocked" = "Bloqueada"
+            "Inbound" = "Entrada"
+            "Outbound" = "Saida"
+            "Rule" = "Regra"
+            "NoRuleFound" = "Nenhuma regra encontrada"
+            "NoneConfigured" = "Nenhum configurado"
+            "UnableToCheck" = "Nao foi possivel verificar"
+            "ServiceStatus" = "STATUS DOS SERVICOS"
+            "ListenersConfig" = "CONFIGURACAO DOS LISTENERS"
+            "Listener" = "Listener"
+            "Transport" = "Transporte"
+            "Hostname" = "Hostname"
+            "NotSpecified" = "Nao especificado"
+            "Enabled" = "Habilitado"
+            "URLPrefix" = "Prefixo URL"
+            "CertThumbprint" = "Thumbprint do Certificado"
+            "None" = "Nenhum"
+            "ListeningOn" = "Escutando em"
+            "FirewallStatus" = "STATUS DO FIREWALL PARA PORTA"
+            "RuleName" = "Nome da Regra"
+            "Direction" = "Direcao"
+            "Action" = "Acao"
+            "Status" = "Status"
+            "RemoteAddress" = "Endereco Remoto"
+            "NoListeners" = "Nenhum listener encontrado!"
+            "WinRMServiceConfig" = "CONFIGURACAO DO SERVICO WINRM"
+            "FirewallRules" = "REGRAS DE FIREWALL"
+            "CertificateInfo" = "INFORMACOES DE CERTIFICADOS"
+            "Subject" = "Assunto"
+            "Thumbprint" = "Thumbprint"
+            "ValidFrom" = "Valido De"
+            "ValidTo" = "Valido Ate"
+            "Expired" = "Expirado"
+            "Yes" = "Sim"
+            "No" = "Nao"
+            "NoCertsFound" = "Nenhum certificado encontrado no armazenamento LocalMachine\\My"
+            "NetworkConfig" = "CONFIGURACAO DE REDE"
+            "Adapter" = "Adaptador"
+            "IPAddress" = "Endereco IP"
+            "WinRMClientConfig" = "CONFIGURACAO DO CLIENTE WINRM"
+            "UnableToRetrieve" = "Nao foi possivel recuperar a configuracao do cliente"
+            "LocalPort" = "Porta Local"
+        }
+        "en-US" = @{
+            "Initializing" = "Initializing WinRM Configuration Script Enhanced v"
+            "LogInitialized" = "Log file initialized:"
+            "GeneratingQuickStatus" = "Generating quick WinRM status..."
+            "GeneratingDetailedStatus" = "Generating detailed WinRM status report..."
+            "QuickStatus" = "WINRM QUICK STATUS"
+            "DetailedStatus" = "WINRM DETAILED STATUS REPORT"
+            "Services" = "SERVICES"
+            "WinRM" = "WinRM"
+            "Firewall" = "Firewall"
+            "Running" = "Running"
+            "Stopped" = "Stopped"
+            "Listeners" = "LISTENERS"
+            "Active" = "Active"
+            "Port" = "Port"
+            "Address" = "Address"
+            "Open" = "Open"
+            "Closed" = "Closed"
+            "Blocked" = "Blocked"
+            "Inbound" = "Inbound"
+            "Outbound" = "Outbound"
+            "Rule" = "Rule"
+            "NoRuleFound" = "No rule found"
+            "NoneConfigured" = "None configured"
+            "UnableToCheck" = "Unable to check"
+            "ServiceStatus" = "SERVICE STATUS"
+            "ListenersConfig" = "LISTENERS CONFIGURATION"
+            "Listener" = "Listener"
+            "Transport" = "Transport"
+            "Hostname" = "Hostname"
+            "NotSpecified" = "Not specified"
+            "Enabled" = "Enabled"
+            "URLPrefix" = "URL Prefix"
+            "CertThumbprint" = "Certificate Thumbprint"
+            "None" = "None"
+            "ListeningOn" = "Listening On"
+            "FirewallStatus" = "FIREWALL STATUS FOR PORT"
+            "RuleName" = "Rule Name"
+            "Direction" = "Direction"
+            "Action" = "Action"
+            "Status" = "Status"
+            "RemoteAddress" = "Remote Address"
+            "NoListeners" = "No listeners found!"
+            "WinRMServiceConfig" = "WINRM SERVICE CONFIGURATION"
+            "FirewallRules" = "FIREWALL RULES"
+            "CertificateInfo" = "CERTIFICATE INFORMATION"
+            "Subject" = "Subject"
+            "Thumbprint" = "Thumbprint"
+            "ValidFrom" = "Valid From"
+            "ValidTo" = "Valid To"
+            "Expired" = "Expired"
+            "Yes" = "Yes"
+            "No" = "No"
+            "NoCertsFound" = "No certificates found in LocalMachine\\My store"
+            "NetworkConfig" = "NETWORK CONFIGURATION"
+            "Adapter" = "Adapter"
+            "IPAddress" = "IP Address"
+            "WinRMClientConfig" = "WINRM CLIENT CONFIGURATION"
+            "UnableToRetrieve" = "Unable to retrieve client configuration"
+            "LocalPort" = "Local Port"
+        }
+    }
+    
+    return $translations[$Language][$Key]
+}
 
 # Logging function
 function Write-Log {
@@ -215,6 +351,7 @@ function Show-Help {
     Write-Host "  -WECHostname      Hostname of Windows Event Collector" -ForegroundColor White
     Write-Host "  -LogLevel         Logging level: Error, Warning, Info, Debug (default: Info)" -ForegroundColor White
     Write-Host "  -ConfigFile       Path to configuration file (JSON format)" -ForegroundColor White
+    Write-Host "  -Language         Output language: pt-BR, en-US (default: pt-BR)" -ForegroundColor White
     Write-Host ""
     
     Write-Host "COMMON SCENARIOS:" -ForegroundColor Yellow
@@ -228,6 +365,7 @@ function Show-Help {
     Write-Host ""
     Write-Host "  # Troubleshooting and verification" -ForegroundColor White
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action status" -ForegroundColor Gray
+    Write-Host "  .\winrmconfig_v2.0.ps1 -Action status -Language en-US" -ForegroundColor Gray
     Write-Host "  .\winrmconfig_v2.0.ps1 -Action report -User `"domain\user`"" -ForegroundColor Gray
     Write-Host ""
     
@@ -248,26 +386,29 @@ function Show-Help {
 
 # Quick status function for summary
 function Get-QuickStatus {
-    Write-Log "Generating quick WinRM status..." "Info"
+    Write-Log (Get-Text "GeneratingQuickStatus") "Info"
     
     # Service Status
     $winrmService = Get-Service -Name "WinRM" -ErrorAction SilentlyContinue
     $firewallService = Get-Service -Name "MpsSvc" -ErrorAction SilentlyContinue
     
     Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
-    Write-Host "WINRM QUICK STATUS" -ForegroundColor Yellow
+    Write-Host (Get-Text "QuickStatus") -ForegroundColor Yellow
     Write-Host ("=" * 60) -ForegroundColor Cyan
     
     # Service Information
-    Write-Host "`nSERVICES:" -ForegroundColor Green
-    Write-Host "  WinRM: $($winrmService.Status)" -ForegroundColor $(if ($winrmService.Status -eq "Running") { "Green" } else { "Red" })
-    Write-Host "  Firewall: $($firewallService.Status)" -ForegroundColor $(if ($firewallService.Status -eq "Running") { "Green" } else { "Red" })
+    $serviceStatus = if ($winrmService.Status -eq "Running") { Get-Text "Running" } else { Get-Text "Stopped" }
+    $firewallStatus = if ($firewallService.Status -eq "Running") { Get-Text "Running" } else { Get-Text "Stopped" }
+    
+    Write-Host "`n$(Get-Text 'Services'):" -ForegroundColor Green
+    Write-Host "  $(Get-Text 'WinRM'): $serviceStatus" -ForegroundColor $(if ($winrmService.Status -eq "Running") { "Green" } else { "Red" })
+    Write-Host "  $(Get-Text 'Firewall'): $firewallStatus" -ForegroundColor $(if ($firewallService.Status -eq "Running") { "Green" } else { "Red" })
     
     # Quick listener check
     try {
         $listeners = winrm enumerate winrm/config/listener
         if ($listeners -and $listeners.Length -gt 0) {
-            Write-Host "`nLISTENERS:" -ForegroundColor Green
+            Write-Host "`n$(Get-Text 'Listeners'):" -ForegroundColor Green
             
             # Convert array to string and split by "Listener" keyword
             $listenersText = $listeners -join "`n"
@@ -296,17 +437,20 @@ function Get-QuickStatus {
                     }
                 }
                 
-                Write-Host "  Listener #$listenerCount`: Active - $transport on port $port (Address: $address)" -ForegroundColor White
+                $activeText = Get-Text "Active"
+                $portText = Get-Text "Port"
+                $addressText = Get-Text "Address"
+                Write-Host "  Listener #$listenerCount`: $activeText - $transport on $portText $port ($addressText`: $address)" -ForegroundColor White
             }
         } else {
-            Write-Host "`nLISTENERS: None configured" -ForegroundColor Red
+            Write-Host "`n$(Get-Text 'Listeners'): $(Get-Text 'NoneConfigured')" -ForegroundColor Red
         }
     } catch {
-        Write-Host "`nLISTENERS: Unable to check" -ForegroundColor Yellow
+        Write-Host "`n$(Get-Text 'Listeners'): $(Get-Text 'UnableToCheck')" -ForegroundColor Yellow
     }
     
     # Quick firewall check for ports 5985 and 5986
-    Write-Host "`nFIREWALL:" -ForegroundColor Green
+    Write-Host "`n$(Get-Text 'Firewall'):" -ForegroundColor Green
     try {
         $ports = @(5985, 5986)
         foreach ($checkPort in $ports) {
@@ -328,15 +472,20 @@ function Get-QuickStatus {
             }
             
             if ($foundRule) {
-                $directionText = if ($direction -eq "Inbound") { "Entrada" } else { "Saida" }
-                $statusText = if ($action -eq "Allow") { "Aberta" } else { "Bloqueada" }
-                Write-Host "  Port $checkPort`: $statusText ($directionText) - Rule: $ruleName" -ForegroundColor $(if ($action -eq "Allow") { "Green" } else { "Red" })
+                $directionText = if ($direction -eq "Inbound") { Get-Text "Inbound" } else { Get-Text "Outbound" }
+                $statusText = if ($action -eq "Allow") { Get-Text "Open" } else { Get-Text "Blocked" }
+                $portText = Get-Text "Port"
+                $ruleText = Get-Text "Rule"
+                Write-Host "  $portText $checkPort`: $statusText ($directionText) - $ruleText`: $ruleName" -ForegroundColor $(if ($action -eq "Allow") { "Green" } else { "Red" })
             } else {
-                Write-Host "  Port $checkPort`: Fechada (Nenhuma regra encontrada)" -ForegroundColor Red
+                $portText = Get-Text "Port"
+                $closedText = Get-Text "Closed"
+                $noRuleText = Get-Text "NoRuleFound"
+                Write-Host "  $portText $checkPort`: $closedText ($noRuleText)" -ForegroundColor Red
             }
         }
     } catch {
-        Write-Host "  Unable to check firewall status" -ForegroundColor Yellow
+        Write-Host "  $(Get-Text 'UnableToCheck')" -ForegroundColor Yellow
     }
     
     Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
