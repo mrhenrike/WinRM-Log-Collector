@@ -268,11 +268,35 @@ function Get-QuickStatus {
         $listeners = winrm enumerate winrm/config/listener
         if ($listeners -and $listeners.Length -gt 0) {
             Write-Host "`nLISTENERS:" -ForegroundColor Green
+            
+            # Convert array to string and split by "Listener" keyword
+            $listenersText = $listeners -join "`n"
+            $listenerBlocks = $listenersText -split "Listener" | Where-Object { $_ -match "Address|Transport|Port" }
+            
             $listenerCount = 0
-            foreach ($listener in $listeners) {
+            foreach ($listenerBlock in $listenerBlocks) {
                 $listenerCount++
-                # Simple display without complex parsing
-                Write-Host "  Listener #$listenerCount`: Active" -ForegroundColor White
+                
+                # Quick parsing
+                $transport = "Unknown"
+                $port = "Unknown"
+                $address = "*"
+                
+                # Parse line by line
+                $lines = $listenerBlock -split "`n"
+                foreach ($line in $lines) {
+                    if ($line -match '^\s*Transport\s*=\s*(.+)$') {
+                        $transport = $matches[1].Trim()
+                    }
+                    elseif ($line -match '^\s*Port\s*=\s*(.+)$') {
+                        $port = $matches[1].Trim()
+                    }
+                    elseif ($line -match '^\s*Address\s*=\s*(.+)$') {
+                        $address = $matches[1].Trim()
+                    }
+                }
+                
+                Write-Host "  Listener #$listenerCount`: Active - $transport on port $port (Address: $address)" -ForegroundColor White
             }
         } else {
             Write-Host "`nLISTENERS: None configured" -ForegroundColor Red
@@ -289,20 +313,26 @@ function Get-QuickStatus {
             $firewallRules = Get-NetFirewallRule -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
             $foundRule = $false
             $ruleName = ""
+            $direction = ""
+            $action = ""
             
             foreach ($rule in $firewallRules) {
                 $portFilter = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
                 if ($portFilter -and ($portFilter.LocalPort -eq $checkPort -or $portFilter.LocalPort -eq "Any")) {
                     $foundRule = $true
                     $ruleName = $rule.DisplayName
+                    $direction = $rule.Direction
+                    $action = $rule.Action
                     break
                 }
             }
             
             if ($foundRule) {
-                Write-Host "  Port $checkPort`: Open (Rule: $ruleName)" -ForegroundColor Green
+                $directionText = if ($direction -eq "Inbound") { "Entrada" } else { "Saida" }
+                $statusText = if ($action -eq "Allow") { "Aberta" } else { "Bloqueada" }
+                Write-Host "  Port $checkPort`: $statusText ($directionText) - Rule: $ruleName" -ForegroundColor $(if ($action -eq "Allow") { "Green" } else { "Red" })
             } else {
-                Write-Host "  Port $checkPort`: Closed (No rule found)" -ForegroundColor Red
+                Write-Host "  Port $checkPort`: Fechada (Nenhuma regra encontrada)" -ForegroundColor Red
             }
         }
     } catch {
