@@ -300,17 +300,69 @@ function New-HTTPSListener {
         
         # Auto-detect certificate if not provided
         if (-not $ThumbPrint) {
-            $cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { 
-                $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date) -and 
-                $_.EnhancedKeyUsageList -contains "Server Authentication"
-            } | Select-Object -First 1
+            Write-Host ""
+            Write-Host ("=" * 60) -ForegroundColor Cyan
+            Write-Host "SELECT CERTIFICATE FOR HTTPS LISTENER" -ForegroundColor Yellow
+            Write-Host ("=" * 60) -ForegroundColor Cyan
+            Write-Host ""
             
-            if ($cert) {
-                $ThumbPrint = $cert.Thumbprint
-                Write-Log "Auto-detected certificate: $ThumbPrint" "Info" "Certificate"
-        } else {
+            # Get all certificates with Server Authentication EKU
+            $certificates = Get-ChildItem Cert:\LocalMachine\My | Where-Object { 
+                $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date) -and (
+                    ($_.Extensions | Where-Object { $_.Oid.FriendlyName -eq "Enhanced Key Usage" } | ForEach-Object { $_.Format($false) }) -match "Server Authentication|Autenticação do Servidor" -or
+                    ($_.EnhancedKeyUsageList | Where-Object { $_.FriendlyName -eq "Server Authentication" -or $_.FriendlyName -eq "Autenticação do Servidor" -or $_.ObjectId -eq "1.3.6.1.5.5.7.3.1" })
+                )
+            }
+            
+            if (-not $certificates -or $certificates.Count -eq 0) {
+                Write-Host "No valid certificates found with Server Authentication EKU." -ForegroundColor Red
+                Write-Host "Please install a valid certificate or provide -ThumbPrint parameter." -ForegroundColor Yellow
                 throw "No valid certificate found. Please provide -ThumbPrint parameter or install a valid certificate."
             }
+            
+            # Display certificates in numbered list
+            Write-Host "Available certificates for HTTPS:" -ForegroundColor Green
+            Write-Host ""
+            
+            for ($i = 0; $i -lt $certificates.Count; $i++) {
+                $cert = $certificates[$i]
+                $subject = if ($cert.Subject) { $cert.Subject.Split(',')[0].Trim() } else { "N/A" }
+                $expiry = if ($cert.NotAfter) { $cert.NotAfter.ToString("yyyy-MM-dd") } else { "N/A" }
+                
+                Write-Host "  $($i + 1). Subject: " -NoNewline
+                Write-Host $subject -ForegroundColor Cyan
+                Write-Host "     Thumbprint: " -NoNewline
+                Write-Host $cert.Thumbprint -ForegroundColor Gray
+                Write-Host "     Expires: " -NoNewline
+                Write-Host $expiry -ForegroundColor Gray
+                Write-Host ""
+            }
+            
+            # Get user selection
+            do {
+                try {
+                    $selection = Read-Host "Enter certificate number (1-$($certificates.Count))"
+                    $index = [int]$selection - 1
+                    
+                    if ($index -ge 0 -and $index -lt $certificates.Count) {
+                        $selectedCert = $certificates[$index]
+                        $ThumbPrint = $selectedCert.Thumbprint
+                        $subject = if ($selectedCert.Subject) { $selectedCert.Subject.Split(',')[0].Trim() } else { "N/A" }
+                        
+                        Write-Host "Selected certificate: " -NoNewline
+                        Write-Host $subject -ForegroundColor Green
+                        Write-Host "Thumbprint: " -NoNewline
+                        Write-Host $ThumbPrint -ForegroundColor Cyan
+                        Write-Log "User selected certificate: $ThumbPrint ($subject)" "Info" "Certificate"
+                        break
+                    } else {
+                        Write-Host "Invalid selection. Please enter a number between 1 and $($certificates.Count)." -ForegroundColor Red
+                    }
+                }
+                catch {
+                    Write-Host "Invalid input. Please enter a valid number." -ForegroundColor Red
+                }
+            } while ($true)
         }
         
         # Check if listener already exists
@@ -547,12 +599,34 @@ function Show-AllCertificates {
         foreach ($cert in $certificates) {
             $hasServerAuth = $false
             try {
+                # Check Enhanced Key Usage extensions
                 $eku = $cert.Extensions | Where-Object { $_.Oid.FriendlyName -eq "Enhanced Key Usage" }
-                if ($eku -and $eku.Format($false) -match "Server Authentication") {
-                    $hasServerAuth = $true
-                    $serverAuthCerts += $cert
+                if ($eku) {
+                    $ekuString = $eku.Format($false)
+                    if ($ekuString -match "Server Authentication" -or $ekuString -match "Autenticação do Servidor") {
+                        $hasServerAuth = $true
+                        $serverAuthCerts += $cert
+                    } else {
+                        $otherCerts += $cert
+                    }
                 } else {
-                    $otherCerts += $cert
+                    # Alternative method: check EnhancedKeyUsageList property
+                    $hasServerAuthEKU = $false
+                    foreach ($eku in $cert.EnhancedKeyUsageList) {
+                        if ($eku.FriendlyName -eq "Server Authentication" -or 
+                            $eku.FriendlyName -eq "Autenticação do Servidor" -or
+                            $eku.ObjectId -eq "1.3.6.1.5.5.7.3.1") {
+                            $hasServerAuthEKU = $true
+                            break
+                        }
+                    }
+                    
+                    if ($hasServerAuthEKU) {
+                        $hasServerAuth = $true
+                        $serverAuthCerts += $cert
+                    } else {
+                        $otherCerts += $cert
+                    }
                 }
             }
             catch {
