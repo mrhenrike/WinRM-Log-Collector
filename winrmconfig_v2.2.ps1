@@ -34,26 +34,26 @@
     Path for log files (default: .\log)
 
 .EXAMPLE
-    .\winrmconfig_v2.1.ps1 -Action enable -ListenerType http -User "domain\serviceaccount"
+    .\winrmconfig_v2.2.ps1 -Action enable -ListenerType http -User "domain\serviceaccount"
 
 .EXAMPLE
-    .\winrmconfig_v2.1.ps1 -Action enable -ListenerType https -User "domain\serviceaccount" -ThumbPrint "ABC123..."
+    .\winrmconfig_v2.2.ps1 -Action enable -ListenerType https -User "domain\serviceaccount" -ThumbPrint "ABC123..."
 
 .EXAMPLE
-    .\winrmconfig_v2.1.ps1 -Action firewall -WecIp "192.168.1.100" -WecHostname "wec-server"
+    .\winrmconfig_v2.2.ps1 -Action firewall -WecIp "192.168.1.100" -WecHostname "wec-server"
 
 .EXAMPLE
-    .\winrmconfig_v2.1.ps1 -Action UserPermissions -User "domain\serviceaccount"
+    .\winrmconfig_v2.2.ps1 -Action UserPermissions -User "domain\serviceaccount"
 
 .EXAMPLE
-    .\winrmconfig_v2.1.ps1 -Action status
+    .\winrmconfig_v2.2.ps1 -Action status
 
 .NOTES
     Author: Andre Henrique (Uniao Geek)
     Email: contato@uniaogeek.com.br
     LinkedIn: https://www.linkedin.com/in/mrhenrike
     Instagram: @uniaogeek
-    Version: 2.1.0
+    Version: 2.2.0
 #>
 
 [CmdletBinding()]
@@ -101,7 +101,7 @@ param(
 )
 
 # Global variables
-$ScriptVersion = "2.1.0"
+$ScriptVersion = "2.2.0"
 $Global:RestartRequired = $false
 
 # Create log directory if it doesn't exist
@@ -1149,7 +1149,7 @@ function Test-UserPermissions {
             Write-Host "  → User can perform log collection operations" -ForegroundColor Cyan
         } else {
             Write-Host "  ✗ User needs to be added to Event Log Readers group" -ForegroundColor Red
-            Write-Host "  → Run: .\winrmconfig_v2.1.ps1 -Action enable -User `"$Username`"" -ForegroundColor Cyan
+            Write-Host "  → Run: .\winrmconfig_v2.2.ps1 -Action enable -User `"$Username`"" -ForegroundColor Cyan
         }
         
         return $inEventLogReaders
@@ -1541,7 +1541,7 @@ function Show-SimpleHelp {
     Write-Host "Simplified WinRM configuration for WEC/WEF log collection" -ForegroundColor White
     Write-Host ""
     Write-Host "USAGE:" -ForegroundColor Yellow
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action <action> [parameters]"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action <action> [parameters]"
     Write-Host ""
     Write-Host "ACTIONS:" -ForegroundColor Yellow
     Write-Host "  Enable/Disable     - Configure or remove WinRM listener (HTTP/HTTPS) - REQUIRES: -User"
@@ -1556,12 +1556,12 @@ function Show-SimpleHelp {
     Write-Host "  ShowHelpLong       - Show detailed help with examples"
     Write-Host ""
     Write-Host "QUICK EXAMPLES:" -ForegroundColor Yellow
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -User `"domain\user`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Disable (interactive selection)"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action CheckPermissions -User `"domain\user`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Status"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -User `"domain\user`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Disable (interactive selection)"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action CheckPermissions -User `"domain\user`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Status"
     Write-Host ""
-    Write-Host "For detailed examples, use: .\winrmconfig_v2.1.ps1 -Action ShowHelpLong"
+    Write-Host "For detailed examples, use: .\winrmconfig_v2.2.ps1 -Action ShowHelpLong"
     Write-Host ""
 }
 
@@ -1572,7 +1572,7 @@ function Show-DetailedHelp {
     Write-Host "Simplified WinRM configuration for WEC/WEF log collection" -ForegroundColor White
     Write-Host ""
     Write-Host "USAGE:" -ForegroundColor Yellow
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action <action> [parameters]"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action <action> [parameters]"
     Write-Host ""
     Write-Host "ACTIONS:" -ForegroundColor Yellow
     Write-Host "  Enable/Disable     - Configure or remove WinRM listener (HTTP/HTTPS)"
@@ -1617,54 +1617,54 @@ function Show-DetailedHelp {
     Write-Host "DETAILED EXAMPLES:" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "  # Configure HTTP listener"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`""
     Write-Host ""
     Write-Host "  # Configure HTTPS listener with certificate"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User `"domain\serviceaccount`" -ThumbPrint `"ABC123...`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User `"domain\serviceaccount`" -ThumbPrint `"ABC123...`""
     Write-Host ""
     Write-Host "  # Configure custom port"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`" -Port 8080"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`" -Port 8080"
     Write-Host ""
     Write-Host "  # Disable WinRM listener (interactive selection)"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Disable"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Disable"
     Write-Host ""
     Write-Host "  # Disable ALL WinRM listeners (non-interactive)"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Disable -User `"*`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Disable -User `"*`""
     Write-Host ""
     Write-Host "  # Configure firewall rules (interactive)"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ConfigureFirewall"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ConfigureFirewall"
     Write-Host ""
     Write-Host "  # Check user permissions"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
     Write-Host ""
     Write-Host "  # Check system status"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Status"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Status"
     Write-Host ""
     Write-Host "  # Configure WinRM policies"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ConfigurePolicies"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ConfigurePolicies"
     Write-Host ""
     Write-Host "  # Show all available certificates"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ShowAllCerts"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ShowAllCerts"
     Write-Host ""
     Write-Host "  # Export CA certificate"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ExportCACert -ExportCertPath `"C:\temp\ca-cert.cer`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ExportCACert -ExportCertPath `"C:\temp\ca-cert.cer`""
     Write-Host ""
     Write-Host "  # Generate comprehensive report"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Report"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Report"
     Write-Host ""
     Write-Host "COMPLETE SETUP EXAMPLES:" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "  # Complete HTTP setup"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ConfigureFirewall"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Status"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User `"domain\serviceaccount`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ConfigureFirewall"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Status"
     Write-Host ""
     Write-Host "  # Complete HTTPS setup"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User `"domain\serviceaccount`" -ThumbPrint `"ABC123...`""
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action ConfigureFirewall"
-    Write-Host "  .\winrmconfig_v2.1.ps1 -Action Status"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action CheckPermissions -User `"domain\serviceaccount`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User `"domain\serviceaccount`" -ThumbPrint `"ABC123...`""
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action ConfigureFirewall"
+    Write-Host "  .\winrmconfig_v2.2.ps1 -Action Status"
     Write-Host ""
     Write-Host "TROUBLESHOOTING:" -ForegroundColor Yellow
     Write-Host "  # Check WinRM status"
@@ -1709,7 +1709,7 @@ function Main {
             if (-not $User) {
                 Write-Log "User parameter is REQUIRED for Enable action" "Error" "Main"
                 Write-Host "ERROR: -User parameter is REQUIRED for Enable action" -ForegroundColor Red
-                Write-Host "Example: .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User `"domain\user`"" -ForegroundColor Yellow
+                Write-Host "Example: .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User `"domain\user`"" -ForegroundColor Yellow
                 return
             }
             
@@ -2288,7 +2288,7 @@ function Main {
             if (-not $User) {
                 Write-Log "User parameter is REQUIRED for CheckPermissions action" "Error" "Main"
                 Write-Host "ERROR: -User parameter is REQUIRED for CheckPermissions action" -ForegroundColor Red
-                Write-Host "Example: .\winrmconfig_v2.1.ps1 -Action CheckPermissions -User `"domain\user`"" -ForegroundColor Yellow
+                Write-Host "Example: .\winrmconfig_v2.2.ps1 -Action CheckPermissions -User `"domain\user`"" -ForegroundColor Yellow
                 return
             }
             
@@ -2319,7 +2319,7 @@ function Main {
             if (-not $ExportCertPath) {
                 Write-Log "ExportCertPath parameter is REQUIRED for ExportCACert action" "Error" "Main"
                 Write-Host "ERROR: -ExportCertPath parameter is REQUIRED for ExportCACert action" -ForegroundColor Red
-                Write-Host "Example: .\winrmconfig_v2.1.ps1 -Action ExportCACert -ExportCertPath `"C:\temp\ca-cert.cer`"" -ForegroundColor Yellow
+                Write-Host "Example: .\winrmconfig_v2.2.ps1 -Action ExportCACert -ExportCertPath `"C:\temp\ca-cert.cer`"" -ForegroundColor Yellow
                 return
             }
             

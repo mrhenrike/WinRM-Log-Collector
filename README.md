@@ -1,4 +1,4 @@
-# WinRM Log Collector v2.1
+# WinRM Log Collector v2.2
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
 [![Windows](https://img.shields.io/badge/Windows-Server%202008%20R2+-green.svg)](https://www.microsoft.com/en-us/windows-server)
@@ -7,7 +7,7 @@
 
 ## 🚀 Visão Geral
 
-O **WinRM Log Collector v2.1** é uma solução PowerShell avançada para configuração e gerenciamento do Windows Remote Management (WinRM) para coleta de logs via Windows Event Collector (WEC) e Windows Event Forwarding (WEF). Esta versão oferece funcionalidades completas para configuração, monitoramento e troubleshooting de ambientes WinRM.
+O **WinRM Log Collector v2.2** é uma solução PowerShell avançada para configuração e gerenciamento do Windows Remote Management (WinRM) para coleta de logs via Windows Event Collector (WEC) e Windows Event Forwarding (WEF). Esta versão oferece funcionalidades completas para configuração, monitoramento e troubleshooting de ambientes WinRM.
 
 ### ✨ Principais Recursos
 
@@ -53,21 +53,21 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ```powershell
 # Configurar listener HTTP básico
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User "domain\serviceaccount"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User "domain\serviceaccount"
 ```
 
 ### 3. Verificar Status
 
 ```powershell
 # Verificar configuração atual
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 ```
 
 ### 4. Gerar Relatório
 
 ```powershell
 # Gerar relatório completo
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 ### ⚡ Quick Reference
@@ -130,13 +130,13 @@ Configura listeners HTTP/HTTPS para coleta de logs.
 
 ```powershell
 # HTTP Listener (Recomendado para desenvolvimento)
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User "domain\user"
 
 # HTTPS Listener (Recomendado para produção)
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "domain\user" -ThumbPrint "ABC123..."
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "domain\user" -ThumbPrint "ABC123..."
 
 # Porta personalizada
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -Port 8080 -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -Port 8080 -User "domain\user"
 ```
 
 **Recursos:**
@@ -152,10 +152,10 @@ Remove listeners configurados com interface interativa.
 
 ```powershell
 # Remoção interativa (seleção manual)
-.\winrmconfig_v2.1.ps1 -Action Disable
+.\winrmconfig_v2.2.ps1 -Action Disable
 
 # Remoção de todos os listeners
-.\winrmconfig_v2.1.ps1 -Action Disable -User "*"
+.\winrmconfig_v2.2.ps1 -Action Disable -User "*"
 ```
 
 **Recursos:**
@@ -170,10 +170,10 @@ Exibe status completo do WinRM e configurações relacionadas.
 
 ```powershell
 # Status completo do sistema
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 
 # Status com porta específica
-.\winrmconfig_v2.1.ps1 -Action Status -Port 5985
+.\winrmconfig_v2.2.ps1 -Action Status -Port 5985
 ```
 
 **Informações Exibidas:**
@@ -189,7 +189,7 @@ Interface interativa para gerenciamento de regras de firewall.
 
 ```powershell
 # Gerenciamento interativo de firewall
-.\winrmconfig_v2.1.ps1 -Action ConfigureFirewall
+.\winrmconfig_v2.2.ps1 -Action ConfigureFirewall
 ```
 
 **Opções Disponíveis:**
@@ -206,7 +206,7 @@ Configura políticas WinRM para otimizar a coleta de logs.
 
 ```powershell
 # Configurar políticas WinRM
-.\winrmconfig_v2.1.ps1 -Action ConfigurePolicies
+.\winrmconfig_v2.2.ps1 -Action ConfigurePolicies
 ```
 
 **Políticas Configuradas:**
@@ -221,7 +221,7 @@ Analisa permissões detalhadas para coleta de logs.
 
 ```powershell
 # Verificar permissões de usuário
-.\winrmconfig_v2.1.ps1 -Action CheckPermissions -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action CheckPermissions -User "domain\user"
 ```
 
 **Verificações Realizadas:**
@@ -237,7 +237,7 @@ Exibe todos os certificados disponíveis para WinRM.
 
 ```powershell
 # Listar todos os certificados
-.\winrmconfig_v2.1.ps1 -Action ShowAllCerts
+.\winrmconfig_v2.2.ps1 -Action ShowAllCerts
 ```
 
 **Informações Exibidas:**
@@ -252,7 +252,7 @@ Exporta certificado CA para configuração de clientes.
 
 ```powershell
 # Exportar certificado CA
-.\winrmconfig_v2.1.ps1 -Action ExportCACert -ExportCertPath "C:\temp\ca-cert.cer"
+.\winrmconfig_v2.2.ps1 -Action ExportCACert -ExportCertPath "C:\temp\ca-cert.cer"
 ```
 
 **Recursos:**
@@ -267,7 +267,7 @@ Gera relatório completo do sistema WinRM.
 
 ```powershell
 # Gerar relatório completo
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 **Dados Coletados:**
@@ -284,7 +284,7 @@ Exibe ajuda rápida e direta.
 
 ```powershell
 # Ajuda simples
-.\winrmconfig_v2.1.ps1 -Action ShowHelp
+.\winrmconfig_v2.2.ps1 -Action ShowHelp
 ```
 
 ### 11. **ShowHelpLong** - Ajuda Detalhada
@@ -293,7 +293,7 @@ Exibe ajuda completa com exemplos e parâmetros.
 
 ```powershell
 # Ajuda detalhada
-.\winrmconfig_v2.1.ps1 -Action ShowHelpLong
+.\winrmconfig_v2.2.ps1 -Action ShowHelpLong
 ```
 
 ---
@@ -361,28 +361,28 @@ Exibe ajuda completa com exemplos e parâmetros.
 
 ```powershell
 # 1. Verificar permissões do usuário
-.\winrmconfig_v2.1.ps1 -Action CheckPermissions -User "wec-collector@contoso.com"
+.\winrmconfig_v2.2.ps1 -Action CheckPermissions -User "wec-collector@contoso.com"
 
 # 2. Listar certificados disponíveis
-.\winrmconfig_v2.1.ps1 -Action ShowAllCerts
+.\winrmconfig_v2.2.ps1 -Action ShowAllCerts
 
 # 3. Configurar listener HTTPS
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "wec-collector@contoso.com" -ThumbPrint "ABC123..."
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "wec-collector@contoso.com" -ThumbPrint "ABC123..."
 
 # 4. Configurar políticas WinRM
-.\winrmconfig_v2.1.ps1 -Action ConfigurePolicies
+.\winrmconfig_v2.2.ps1 -Action ConfigurePolicies
 
 # 5. Configurar firewall
-.\winrmconfig_v2.1.ps1 -Action ConfigureFirewall
+.\winrmconfig_v2.2.ps1 -Action ConfigureFirewall
 
 # 6. Exportar certificado CA
-.\winrmconfig_v2.1.ps1 -Action ExportCACert -ExportCertPath "C:\WEC\Certificates\ca-cert.cer"
+.\winrmconfig_v2.2.ps1 -Action ExportCACert -ExportCertPath "C:\WEC\Certificates\ca-cert.cer"
 
 # 7. Verificar configuração
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 
 # 8. Gerar relatório final
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 ### Cenário 2: Ambiente de Desenvolvimento/Teste
@@ -391,13 +391,13 @@ Exibe ajuda completa com exemplos e parâmetros.
 
 ```powershell
 # 1. Configuração rápida HTTP
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User "testuser" -Port 5985
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User "testuser" -Port 5985
 
 # 2. Verificar status
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 
 # 3. Gerar relatório
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 ### Cenário 3: Troubleshooting e Diagnóstico
@@ -406,19 +406,19 @@ Exibe ajuda completa com exemplos e parâmetros.
 
 ```powershell
 # 1. Verificar status atual
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 
 # 2. Verificar permissões
-.\winrmconfig_v2.1.ps1 -Action CheckPermissions -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action CheckPermissions -User "domain\user"
 
 # 3. Listar certificados
-.\winrmconfig_v2.1.ps1 -Action ShowAllCerts
+.\winrmconfig_v2.2.ps1 -Action ShowAllCerts
 
 # 4. Gerar relatório detalhado
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 
 # 5. Verificar firewall
-.\winrmconfig_v2.1.ps1 -Action ConfigureFirewall
+.\winrmconfig_v2.2.ps1 -Action ConfigureFirewall
 ```
 
 ### Cenário 4: Migração e Atualização
@@ -427,16 +427,16 @@ Exibe ajuda completa com exemplos e parâmetros.
 
 ```powershell
 # 1. Backup da configuração atual
-.\winrmconfig_v2.1.ps1 -Action Report > backup-config.txt
+.\winrmconfig_v2.2.ps1 -Action Report > backup-config.txt
 
 # 2. Remover configuração antiga
-.\winrmconfig_v2.1.ps1 -Action Disable -User "*"
+.\winrmconfig_v2.2.ps1 -Action Disable -User "*"
 
 # 3. Configurar nova versão
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "domain\user"
 
 # 4. Verificar migração
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 ```
 
 ---
@@ -454,10 +454,10 @@ Exibe ajuda completa com exemplos e parâmetros.
 #### ✅ Configuração Segura
 ```powershell
 # Usar certificados com Server Authentication EKU
-.\winrmconfig_v2.1.ps1 -Action ShowAllCerts
+.\winrmconfig_v2.2.ps1 -Action ShowAllCerts
 
 # Configurar HTTPS com certificado válido
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "domain\user" -ThumbPrint "VALID_THUMBPRINT"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "domain\user" -ThumbPrint "VALID_THUMBPRINT"
 ```
 
 ### Autenticação
@@ -470,10 +470,10 @@ Exibe ajuda completa com exemplos e parâmetros.
 #### ✅ Configuração de Usuários
 ```powershell
 # Verificar permissões antes da configuração
-.\winrmconfig_v2.1.ps1 -Action CheckPermissions -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action CheckPermissions -User "domain\user"
 
 # Usar contas de serviço dedicadas
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "wec-service@domain.com"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "wec-service@domain.com"
 ```
 
 ### Firewall
@@ -486,10 +486,10 @@ Exibe ajuda completa com exemplos e parâmetros.
 #### ✅ Monitoramento
 ```powershell
 # Verificar regras de firewall
-.\winrmconfig_v2.1.ps1 -Action ConfigureFirewall
+.\winrmconfig_v2.2.ps1 -Action ConfigureFirewall
 
 # Monitorar status regularmente
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 ```
 
 ### Políticas WinRM
@@ -503,10 +503,10 @@ Exibe ajuda completa com exemplos e parâmetros.
 #### ✅ Aplicação de Políticas
 ```powershell
 # Configurar políticas automaticamente
-.\winrmconfig_v2.1.ps1 -Action ConfigurePolicies
+.\winrmconfig_v2.2.ps1 -Action ConfigurePolicies
 
 # Verificar configuração
-.\winrmconfig_v2.1.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Status
 ```
 
 ---
@@ -534,7 +534,7 @@ Get-LocalUser -Name "username"
 Get-ADUser -Identity "username"
 
 # Usar formato correto
-.\winrmconfig_v2.1.ps1 -Action CheckPermissions -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action CheckPermissions -User "domain\user"
 ```
 
 #### ❌ "Certificate not found"
@@ -542,13 +542,13 @@ Get-ADUser -Identity "username"
 **Solução**:
 ```powershell
 # Listar certificados disponíveis
-.\winrmconfig_v2.1.ps1 -Action ShowAllCerts
+.\winrmconfig_v2.2.ps1 -Action ShowAllCerts
 
 # Verificar certificados no store
 Get-ChildItem Cert:\LocalMachine\My
 
 # Usar thumbprint correto
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -ThumbPrint "CORRECT_THUMBPRINT"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -ThumbPrint "CORRECT_THUMBPRINT"
 ```
 
 #### ❌ "Firewall rule failed"
@@ -559,7 +559,7 @@ Get-ChildItem Cert:\LocalMachine\My
 Get-NetConnectionProfile
 
 # Configurar firewall interativamente
-.\winrmconfig_v2.1.ps1 -Action ConfigureFirewall
+.\winrmconfig_v2.2.ps1 -Action ConfigureFirewall
 
 # Verificar regras existentes
 Get-NetFirewallRule -DisplayName "*WinRM*"
@@ -576,7 +576,7 @@ Get-Service WinRM
 Start-Service WinRM
 
 # Configurar automaticamente
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User "domain\user"
 ```
 
 ### Logs e Diagnóstico
@@ -589,7 +589,7 @@ Start-Service WinRM
 #### 🔍 Habilitar Logging Debug
 ```powershell
 # Executar com logging debug
-.\winrmconfig_v2.1.ps1 -Action Enable -LogLevel Debug -User "domain\user"
+.\winrmconfig_v2.2.ps1 -Action Enable -LogLevel Debug -User "domain\user"
 ```
 
 #### 📊 Análise de Logs
@@ -601,7 +601,7 @@ Get-Content .\log\winrmconfig_*.log | Select-Object -Last 50
 Get-Content .\log\winrmconfig_*.log | Where-Object {$_ -match "ERROR"}
 
 # Analisar configuração
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 ### Testes de Conectividade
@@ -655,12 +655,12 @@ foreach ($server in $servers) {
     
     # Configurar WinRM
     Invoke-Command -ComputerName $server -ScriptBlock {
-        .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User $using:user
+        .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User $using:user
     }
     
     # Verificar configuração
     Invoke-Command -ComputerName $server -ScriptBlock {
-        .\winrmconfig_v2.1.ps1 -Action Status
+        .\winrmconfig_v2.2.ps1 -Action Status
     }
 }
 ```
@@ -672,11 +672,11 @@ foreach ($server in $servers) {
 ```powershell
 # Script de monitoramento
 while ($true) {
-    $status = .\winrmconfig_v2.1.ps1 -Action Status
+    $status = .\winrmconfig_v2.2.ps1 -Action Status
     
     if ($status -match "Inactive") {
         Write-Host "WinRM inativo detectado - reconfigurando..." -ForegroundColor Yellow
-        .\winrmconfig_v2.1.ps1 -Action Enable -ListenerType http -User "domain\user"
+        .\winrmconfig_v2.2.ps1 -Action Enable -ListenerType http -User "domain\user"
     }
     
     Start-Sleep -Seconds 300  # Verificar a cada 5 minutos
@@ -693,7 +693,7 @@ $backupDate = Get-Date -Format "yyyyMMdd_HHmmss"
 $backupFile = ".\backup\winrm_config_$backupDate.json"
 
 # Gerar backup
-.\winrmconfig_v2.1.ps1 -Action Report | Out-File $backupFile
+.\winrmconfig_v2.2.ps1 -Action Report | Out-File $backupFile
 
 # Restore (exemplo)
 $config = Get-Content $backupFile | ConvertFrom-Json
@@ -706,17 +706,17 @@ $config = Get-Content $backupFile | ConvertFrom-Json
 
 ```powershell
 # 1. Configurar WinRM no servidor de eventos
-.\winrmconfig_v2.1.ps1 -Action Enable -ListenerType https -User "wec-collector@domain.com"
+.\winrmconfig_v2.2.ps1 -Action Enable -ListenerType https -User "wec-collector@domain.com"
 
 # 2. Exportar certificado
-.\winrmconfig_v2.1.ps1 -Action ExportCACert -ExportCertPath "C:\WEC\ca-cert.cer"
+.\winrmconfig_v2.2.ps1 -Action ExportCACert -ExportCertPath "C:\WEC\ca-cert.cer"
 
 # 3. Configurar WEC (exemplo)
 wecutil cs subscription.xml
 
 # 4. Verificar configuração
-.\winrmconfig_v2.1.ps1 -Action Status
-.\winrmconfig_v2.1.ps1 -Action Report
+.\winrmconfig_v2.2.ps1 -Action Status
+.\winrmconfig_v2.2.ps1 -Action Report
 ```
 
 ---
@@ -769,22 +769,30 @@ Para reportar bugs:
 
 ## 📋 Histórico de Versões
 
-### v2.1.0 (Atual) - 2025-10-08
+### v2.2.0 (Atual) - 2025-10-09
 
 #### ✨ Novas Funcionalidades
-- ✅ **11 Actions Completas**: Enable, Disable, Status, ConfigureFirewall, ConfigurePolicies, CheckPermissions, ShowAllCerts, ExportCACert, Report, ShowHelp, ShowHelpLong
-- ✅ **Interface Interativa**: ConfigureFirewall com menu interativo
-- ✅ **Verificação de Permissões**: Análise detalhada de usuários e grupos
-- ✅ **Gerenciamento de Certificados**: Listagem e exportação de certificados
-- ✅ **Relatórios Abrangentes**: Análise completa do sistema
-- ✅ **Sistema de Help**: Help simples e detalhado integrado
+- ✅ **Testes Completos**: Validação linha por linha de todas as funcionalidades
+- ✅ **Logs Aprimorados**: Sistema de logging com componentes e níveis detalhados
+- ✅ **Interface Interativa**: Menus interativos para ConfigureFirewall e Disable
+- ✅ **Validação de Usuários**: Verificação robusta de usuários locais e AD
+- ✅ **Relatórios Detalhados**: Análise completa do sistema com recomendações
+- ✅ **Tratamento de Erros**: Tratamento robusto de exceções e avisos
 
 #### 🔧 Melhorias
-- ✅ **Tratamento de Erros**: Robusto e detalhado
-- ✅ **Logging Avançado**: Sistema de logs com rotação
-- ✅ **Validação de Parâmetros**: Validação completa de entrada
-- ✅ **Formatação de Saída**: Tabelas e cores profissionais
-- ✅ **Documentação**: README completo e detalhado
+- ✅ **Correção de Referências**: Todas as referências atualizadas para v2.2
+- ✅ **Validação de Certificados**: Listagem organizada por categoria EKU
+- ✅ **Políticas WinRM**: Configuração automática de políticas ideais
+- ✅ **Firewall Management**: Interface interativa para gerenciamento de regras
+- ✅ **Documentação**: README atualizado com Quick Reference
+
+#### 🐛 Correções
+- ✅ **Help Commands**: Referências de versão corrigidas
+- ✅ **Logging System**: Componentes e níveis de log organizados
+- ✅ **Error Handling**: Tratamento melhorado de exceções de rede
+- ✅ **User Validation**: Validação aprimorada de usuários built-in
+
+---
 
 #### 🐛 Correções
 - ✅ **Parsing de Usuários**: Suporte a múltiplos formatos

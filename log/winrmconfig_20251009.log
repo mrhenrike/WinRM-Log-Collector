@@ -1,0 +1,37 @@
+﻿[2025-10-09 14:47:45] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:47:45] [Info] [Status] Generating system status report
+[2025-10-09 14:47:58] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:17] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:20] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:25] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:25] [Info] [Certificates] Retrieving all certificates
+[2025-10-09 14:48:25] [Success] [Certificates] Certificate listing completed successfully
+[2025-10-09 14:48:29] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:29] [Info] [Report] Generating comprehensive WinRM report
+[2025-10-09 14:48:29] [Info] [Listeners] Getting active WinRM listeners
+[2025-10-09 14:48:34] [Success] [Report] Comprehensive report generated successfully
+[2025-10-09 14:48:37] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:48:37] [Info] [UserPermissions] Checking permissions for user: Administrator
+[2025-10-09 14:48:38] [Info] [UserValidation] AD module not available or user not found in AD
+[2025-10-09 14:48:38] [Info] [UserValidation] Found built-in user: Administrator
+[2025-10-09 14:48:38] [Info] [UserValidation] ADSI method failed for Event Log Readers group
+[2025-10-09 14:48:44] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:49:47] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:49:47] [Info] [Policies] Configuring WinRM policies
+[2025-10-09 14:49:59] [Success] [Policies] WinRM policies configured successfully
+[2025-10-09 14:50:03] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:50:04] [Success] [Main] WinRM service restarted successfully
+[2025-10-09 14:50:04] [Info] [UserValidation] AD module not available or user not found in AD
+[2025-10-09 14:50:04] [Info] [UserValidation] Found built-in user: Administrator
+[2025-10-09 14:50:04] [Error] [UserManagement] Failed to add user to Event Log Readers group: A seguinte exceção ocorreu ao recuperar o membro "Add": "Não foi possível localizar o nome de grupo.
+"
+[2025-10-09 14:50:04] [Info] [Listener] Creating HTTP listener on port 5985
+[2025-10-09 14:50:05] [Success] [Listener] HTTP listener configured successfully on port 5985
+[2025-10-09 14:50:05] [Info] [Policies] Configuring WinRM policies
+[2025-10-09 14:50:06] [Success] [Policies] WinRM policies configured successfully
+[2025-10-09 14:50:06] [Success] [Main] WinRM configuration completed successfully
+[2025-10-09 14:50:10] [Info] [Main] WinRM Configuration Script v2.2.0 started
+[2025-10-09 14:50:10] [Info] [Listeners] Getting active WinRM listeners
+[2025-10-09 14:50:24] [Info] [Listeners] Getting active WinRM listeners
+[2025-10-09 14:50:25] [Success] [Main] WinRM service disabled successfully
+[2025-10-09 14:50:25] [Success] [Main] WinRM listeners disabled successfully
