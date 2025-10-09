@@ -24,6 +24,7 @@ O **WinRM Log Collector v2.1** é uma solução PowerShell avançada para config
 ## 📋 Índice
 
 - [🚀 Início Rápido](#-início-rápido)
+  - [⚡ Quick Reference](#-quick-reference)
 - [📖 Guia Completo](#-guia-completo)
 - [🎯 Actions Disponíveis](#-actions-disponíveis)
 - [⚙️ Parâmetros de Configuração](#️-parâmetros-de-configuração)
@@ -68,6 +69,23 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 # Gerar relatório completo
 .\winrmconfig_v2.1.ps1 -Action Report
 ```
+
+### ⚡ Quick Reference
+
+| Ação | Comando | Descrição |
+|------|---------|-----------|
+| **Status** | `-Action Status` | Verificar status do sistema |
+| **Enable HTTP** | `-Action Enable -ListenerType http -User "user"` | Configurar listener HTTP |
+| **Enable HTTPS** | `-Action Enable -ListenerType https -User "user"` | Configurar listener HTTPS |
+| **Disable** | `-Action Disable` | Remover listeners |
+| **Firewall** | `-Action ConfigureFirewall` | Gerenciar regras de firewall |
+| **Policies** | `-Action ConfigurePolicies` | Configurar políticas WinRM |
+| **Permissions** | `-Action CheckPermissions -User "user"` | Verificar permissões |
+| **Certificates** | `-Action ShowAllCerts` | Listar certificados |
+| **Export CA** | `-Action ExportCACert -ExportCertPath "path"` | Exportar certificado CA |
+| **Report** | `-Action Report` | Gerar relatório completo |
+| **Help** | `-Action ShowHelp` | Ajuda rápida |
+| **Help Long** | `-Action ShowHelpLong` | Ajuda detalhada |
 
 ---
 
